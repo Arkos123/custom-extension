@@ -1773,8 +1773,8 @@ class ArkosExtensions {
 				util.target.runtime.requestRedraw();
 			}
 		} else {
-			util.target.x = x;
-			util.target.y = y;
+			util.target.x = args.x;
+			util.target.y = args.y;
 		}
 		util.target.emit('TARGET_MOVED', util.target, oldX, oldY, false);
 		util.target.runtime.requestTargetsUpdate(util.target);
