@@ -4,11 +4,34 @@ import Color from '../utils/color.js'
 // import icon from './assets/icon.svg'
 //鸣谢：-6 优化代码和修复了一些 bug；_30 提供了部分拓展积木
 
+/** @typedef {string|number|boolean} SCarg 来自Scratch圆形框的参数，虽然这个框可能只能输入数字，但是可以放入变量，因此有可能获得数字和文本，需要同时处理 */
+
+/** @typedef {any} Util util 参数，暂时定为 any */
+
+/**
+ * @typedef {{name: SCarg, rankValue: number, extra: SCarg}} SortedTableItem 排序表项目
+ * @typedef {{order: "asc"|"desc", list: SortedTableItem[]}} SortedTable 排序表
+ */
+
 class ArkosExtensions {
 	constructor(runtime) {
 		this.runtime = runtime
+
+		/** 临时数据
+		 * @type {{[name: string]: SCarg | SCarg[] | {[key: string]: SCarg}}}
+		 */
 		this.tempData = {}
+
+		/**
+		 * 记录上一帧按下的键状态
+		 * @type {{[key: string]: boolean}}
+		 */
 		this.lastKeyPressed={} //记录上一帧按下的键状态
+
+		/**
+		 * 排序表
+		 * @type {{[name: string]: SortedTable}}
+		 */
 		this.sortedTable = {
 			list1: {
 				order: 'desc',
@@ -19,6 +42,7 @@ class ArkosExtensions {
 				list: []
 			},
 		}
+
 		this._formatMessage = runtime.getFormatMessage({
 			'zh-cn': {
 				'ArkosExt.extensionName': 'Arkosの拓展',
@@ -294,6 +318,11 @@ class ArkosExtensions {
 		})
 	}
 
+	/**
+	 * 获取翻译
+	 * @param {string} id
+	 * @returns {string}
+	 */
 	formatMessage(id) {
 		return this._formatMessage({
 			id,
@@ -1619,6 +1648,13 @@ class ArkosExtensions {
 		}
 	}
 
+	/**
+	 * 判断相等（区分大小写）
+	 * @param {object} args
+	 * @param {SCarg} args.ONE
+	 * @param {SCarg} args.TWO
+	 * @returns {boolean}
+	 */
 	strictlyEquals(args) {
 		// 实际上在这里直接使用严格相等是不太明智的，因为有一定的可能会遇到数字和字符比较，
 		// 而在Scratch中数字和字符在表现完全一样的时候几乎没有区别。
@@ -1626,6 +1662,15 @@ class ArkosExtensions {
 		return Cast.toString(args.ONE) === Cast.toString(args.TWO)
 	}
 
+	/**
+	 * 计算点A到点B的方向
+	 * @param {object} args
+	 * @param {SCarg} args.X1
+	 * @param {SCarg} args.Y1
+	 * @param {SCarg} args.X2
+	 * @param {SCarg} args.Y2
+	 * @returns {number}
+	 */
 	getDirFromAToB(args) {
 		// 一定要先转化为数字；
 		const X1 = Cast.toNumber(args.X1)
@@ -1639,6 +1684,13 @@ class ArkosExtensions {
 		return a;
 	}
 
+	/**
+	 * 计算角b-角a的角度差
+	 * @param {object} args
+	 * @param {SCarg} args.a
+	 * @param {SCarg} args.b
+	 * @returns {number}
+	 */
 	differenceBetweenDirections(args) {
 		const a = Cast.toNumber(args.a)
 		const b = Cast.toNumber(args.b)
@@ -1648,6 +1700,15 @@ class ArkosExtensions {
 		return dif
 	}
 
+	/**
+	 * 两点距离
+	 * @param {object} args
+	 * @param {SCarg} args.X1
+	 * @param {SCarg} args.Y1
+	 * @param {SCarg} args.X2
+	 * @param {SCarg} args.Y2
+	 * @returns {number}
+	 */
 	disFromAToB(args) {
 		const X1 = Cast.toNumber(args.X1)
 		const X2 = Cast.toNumber(args.X2)
@@ -1656,6 +1717,14 @@ class ArkosExtensions {
 		return Math.sqrt((X1 - X2) * (X1 - X2) + (Y1 - Y2) * (Y1 - Y2))
 	}
 
+	/**
+	 * 查找子字符串，从pos开始
+	 * @param {object} args
+	 * @param {SCarg} args.str
+	 * @param {SCarg} args.substr
+	 * @param {SCarg} args.pos
+	 * @returns {number}
+	 */
 	indexof(args) {
 		const str = Cast.toString(args.str)
 		const substr = Cast.toString(args.substr)
@@ -1667,6 +1736,14 @@ class ArkosExtensions {
 		return a + 1
 	}
 
+	/**
+	 * 在字符串中插入子字符串
+	 * @param {object} args
+	 * @param {SCarg} args.str
+	 * @param {SCarg} args.substr
+	 * @param {SCarg} args.pos
+	 * @returns {string}
+	 */
 	insertStr(args) {
 		const str = Cast.toString(args.str)
 		const substr = Cast.toString(args.substr)
@@ -1677,6 +1754,15 @@ class ArkosExtensions {
 		return str.slice(0, pos) + substr + str.slice(pos)
 	}
 
+	/**
+	 * 替换字符串中的从..到..的字符串
+	 * @param {object} args
+	 * @param {SCarg} args.str
+	 * @param {SCarg} args.substr
+	 * @param {SCarg} args.start
+	 * @param {SCarg} args.end
+	 * @returns {string}
+	 */
 	replaceStr(args) {
 		const str = Cast.toString(args.str)
 		const substr = Cast.toString(args.substr)
@@ -1692,6 +1778,14 @@ class ArkosExtensions {
 	}
 
 
+	/**
+	 * 朝..方向旋转..角度
+	 * @param {object} args
+	 * @param {SCarg} args.degree
+	 * @param {SCarg} args.dir
+	 * @param {Util} util
+	 * @returns {void}
+	 */
 	turnDegreesToDir(args, util) {
 		const degree = Cast.toNumber(args.degree);
 		const dir = Cast.toNumber(args.dir);
@@ -1707,7 +1801,13 @@ class ArkosExtensions {
 			util.target.setDirection(util.target.direction + degree);
 	}
 
-	//获取特效的数值
+	/**
+	 * 获取特效的数值
+	 * @param {object} args
+	 * @param {SCarg} args.EFFECT
+	 * @param {Util} util
+	 * @returns {number}
+	 */
 	getEffect(args, util) {
 		let effect = Cast.toString(args.EFFECT)
 			.toLowerCase();
@@ -1715,24 +1815,48 @@ class ArkosExtensions {
 		return util.target.effects[effect];
 	}
 
-	//角色是否可见
+	/**
+	 * 是否隐藏
+	 * @param {object} args
+	 * @param {Util} util
+	 * @returns {boolean}
+	 */
+	// @ts-ignore 不需要使用 args
 	isHiding(args, util) {
 		return !util.target.visible;
 	}
 
 
-	//获取当前角色的旋转方式
+	/**
+	 * 获取当前角色的旋转方式
+	 * @param {object} args
+	 * @param {Util} util
+	 * @returns {string}
+	 */
+	// @ts-ignore 不需要使用 args
 	getRotationStyle(args, util) {
 		return util.target.rotationStyle;
 	}
 
-	//获取当前造型的长/宽
+	/**
+	 * 获取造型0宽1高
+	 * @param {object} args
+	 * @param {SCarg} args.t
+	 * @param {Util} util
+	 * @returns {number}
+	 */
 	getWidthOrHeight(args, util) {
 		const costumeSize = util.target.renderer.getCurrentSkinSize(util.target.drawableID);
 		return costumeSize[args.t];
 	}
 
-	//强行设置大小(逝一逝)
+	/**
+	 * 强行设置大小
+	 * @param {object} args
+	 * @param {SCarg} args.size
+	 * @param {Util} util
+	 * @returns {void}
+	 */
 	setSize(args, util) {
 		if(util.target.isStage) {
 			return;
@@ -1753,11 +1877,25 @@ class ArkosExtensions {
 		util.target.runtime.requestTargetsUpdate(util.target);
 	}
 
+	/**
+	 * 将 n 的值限制在 min 和 max 之间
+	 * @param {number} n
+	 * @param {number} min
+	 * @param {number} max
+	 * @returns {number}
+	 */
 	_clamp(n, min, max) {
 		return Math.min(Math.max(n, min), max);
 	}
 
-	//强行设置XY(逝一逝)
+	/**
+	 * 强行移到xy
+	 * @param {object} args
+	 * @param {SCarg} args.x
+	 * @param {SCarg} args.y
+	 * @param {Util} util
+	 * @returns {void}
+	 */
 	setXY(args, util) {
 		if(util.target.isStage) return;
 		args.x = this._clamp(Cast.toNumber(args.x), -100000000, 100000000)
@@ -1780,7 +1918,13 @@ class ArkosExtensions {
 		util.target.runtime.requestTargetsUpdate(util.target);
 	}
 
-	//获取角色边缘的坐标
+	/**
+	 * 获取角色边缘的坐标
+	 * @param {object} args
+	 * @param {SCarg} args.t
+	 * @param {Util} util
+	 * @returns {number}
+	 */
 	getBoundaryCoord(args, util) {
 		const bounds = util.target.runtime.renderer.getBounds(util.target.drawableID);
 		switch (args.t) {
@@ -1797,7 +1941,13 @@ class ArkosExtensions {
 		}
 	}
 
-	//是否在舞台外
+	/**
+	 * 是否在舞台外
+	 * @param {object} args
+	 * @param {Util} util
+	 * @returns {boolean}
+	 */
+	// @ts-ignore 不需要使用 args
 	isOutOfSight(args, util) {
 		// console.log(util.target.runtime.renderer)
 		// console.log(util.target.renderer)
@@ -1817,18 +1967,34 @@ class ArkosExtensions {
 		return false;
 	}
 
+	/**
+	 * 克隆体数量
+	 * @returns {number}
+	 */
 	cloneCount(){
 		return this.runtime._cloneCounter;
 	}
 
-	//（废弃）形如：<() >
+	/**
+	 * （隐藏）返回值转bool积木
+	 * （废弃）形如：<() >
+	 * @param {object} args
+	 * @param {SCarg} args.t
+	 * @returns {boolean}
+	 */
 	reporterToBoolean(args) {
 		const t = Cast.toString(args.t).toLowerCase()
 		if(t === 'false'||t === '0'||t === 'undefined'||t === 'null'||t === '') return false;
 		return (args.t) ? true : false;
 	}
 
-	//形如：<()成立/不成立 >
+	/**
+	 * 形如：<()成立/不成立 >
+	 * @param {object} args
+	 * @param {SCarg} args.t
+	 * @param {SCarg} args.type
+	 * @returns {boolean}
+	 */
 	reporterToBoolean2(args) {
 		const t = Cast.toString(args.t).toLowerCase()
 		let b
@@ -1837,10 +2003,24 @@ class ArkosExtensions {
 		return (args.type === '1')? b : (!b);
 	}
 
+	/**
+	 * 没有被使用
+	 * @param {object} args
+	 * @param {SCarg} args.t
+	 * @param {SCarg} args.type
+	 * @returns {boolean}
+	 */
 	trueOrFalse(args) {
 		return (args.type === '1')? true : false;
 	}
 
+	/**
+	 * 用指定运算符比较 a 和 b
+	 * @param {SCarg} a
+	 * @param {SCarg} b
+	 * @param {SCarg} op 比较运算符，< > = ≤ ≥ ≠
+	 * @returns {boolean}
+	 */
 	compare(a, b, op) {
 		switch (op) {
 			case '<':
@@ -1860,6 +2040,14 @@ class ArkosExtensions {
 		}
 	}
 
+	/**
+	 * 二元运算符
+	 * @param {object} args
+	 * @param {SCarg} args.cal 运算符（1最大，2最小，3差的绝对值，4平方和，5平方和的开方）
+	 * @param {SCarg} args.a
+	 * @param {SCarg} args.b
+	 * @returns {SCarg}
+	 */
 	binaryCal(args){
 		let a = Cast.toNumber(args.a)
 		let b = Cast.toNumber(args.b)
@@ -1877,10 +2065,24 @@ class ArkosExtensions {
 		}
 	}
 
+	/**
+	 * 默认值，如果 c 是空白，就返回 d，否则返回 c
+	 * @param {object} args
+	 * @param {SCarg} args.c
+	 * @param {SCarg} args.d
+	 * @returns {SCarg}
+	 */
 	defaultValue(args){
 		return (args.c === '')? args.d : args.c;
 	}
 
+	/**
+	 * 判断是否是数字
+	 * @param {object} args
+	 * @param {SCarg} args.c
+	 * @param {SCarg} args.type
+	 * @returns {boolean}
+	 */
 	isNum(args){
 		if(args.type === '1')
 		{
@@ -1894,13 +2096,23 @@ class ArkosExtensions {
 		return false;
 	}
 
-	//取符号。负数为-1,0和正数为1
+	/**
+	 * 取符号。负数为-1,0和正数为1
+	 * @param {object} args
+	 * @param {SCarg} args.c
+	 * @returns {-1|1}
+	 */
 	sgn(args){
 		let c = Cast.toNumber(args.c)
 		return c<0 ? -1 : 1; 
 	}
 
-	//概率
+	/**
+	 * 概率
+	 * @param {object} args
+	 * @param {SCarg} args.p
+	 * @returns {boolean}
+	 */
 	probability(args){
 		let p = Cast.toNumber(args.p)
 		if(p===1) return true;
@@ -1908,7 +2120,14 @@ class ArkosExtensions {
 		return (Math.random() < p)? true : false;
 	}
 
-	//积木暂时隐藏，不上线
+	/**
+	 * 积木暂时隐藏，不上线
+	 * （有bug暂时隐藏）按下x键且上次没按
+	 * @param {object} args
+	 * @param {SCarg} args.key
+	 * @param {Util} util
+	 * @returns {boolean}
+	 */
 	getKeyDown (args, util) {
 		let flag = false
 		let pressed =  util.ioQuery('keyboard', 'getKeyIsDown', [args.key]);
@@ -1917,7 +2136,15 @@ class ArkosExtensions {
 		return flag;
     }
 
-	//暂时不知如何实现
+	/**
+	 * 检测值变化
+	 * 暂时不知如何实现
+	 * @param {object} args
+	 * @param {SCarg} args.c
+	 * @param {Util} util
+	 * @returns {boolean}
+	 */
+	// @ts-ignore 不需要使用 args
 	dataChanged(args, util){
 		// let cached = util.target.blocks._cache._executeCached
 		// console.log(Object.keys(cached)[0])
@@ -1926,12 +2153,25 @@ class ArkosExtensions {
 		return false;
 	}
 
-	//xxx,xx,xx 包含xx？
+	/**
+	 * xxx,xx,xx 包含xx？
+	 * @param {object} args
+	 * @param {SCarg} args.list
+	 * @param {SCarg} args.ch
+	 * @param {SCarg} args.c
+	 * @returns {boolean}
+	 */
 	contain(args) {
 		let list = Cast.toString(args.list).split(Cast.toString(args.ch))
 		return this._ifListItemExist(list, Cast.toString(args.c))
 	}
 
+	/**
+	 * JSON列表长度
+	 * @param {object} args
+	 * @param {SCarg} args.list
+	 * @returns {number}
+	 */
 	lenOfJSONList(args) {
 		try {
 			let list = JSON.parse(Cast.toString(args.list))
@@ -1944,6 +2184,14 @@ class ArkosExtensions {
 		}
 	}
 	
+
+	/**
+	 * JSON列表包含XX
+	 * @param {object} args
+	 * @param {SCarg} args.list
+	 * @param {SCarg} args.c
+	 * @returns {boolean}
+	 */
 	JSONListContains(args) {
 		try {
 			let list = JSON.parse(Cast.toString(args.list))
@@ -1956,7 +2204,14 @@ class ArkosExtensions {
 		}
 	}
 
-	//加入/从JSON列表删除
+	/**
+	 * JSON列表加入/删除
+	 * @param {object} args
+	 * @param {SCarg} args.list
+	 * @param {SCarg} args.c
+	 * @param {SCarg} args.type
+	 * @returns {string}
+	 */
 	editJSONList(args) {
 		try {
 			let list = JSON.parse(Cast.toString(args.list))
@@ -1979,12 +2234,31 @@ class ArkosExtensions {
 		}
 	}
 
-	//形如：a≤b≤c op1,op2
+	/**
+	 * 形如：a≤b≤c op1,op2
+	 * @param {object} args
+	 * @param {SCarg} args.a
+	 * @param {SCarg} args.b
+	 * @param {SCarg} args.c
+	 * @param {SCarg} args.op1
+	 * @param {SCarg} args.op2
+	 * @returns {boolean}
+	 */
 	compareTwoSides(args) {
 		return this.compare(args.a, args.b, args.op1) && this.compare(args.b, args.c, args.op2)
 	}
 
-	//形如：a≤b且/或>c op1,op2 logic 
+	/**
+	 * 形如：a≤b且/或>c op1,op2 logic
+	 * @param {object} args
+	 * @param {SCarg} args.a
+	 * @param {SCarg} args.b
+	 * @param {SCarg} args.c
+	 * @param {SCarg} args.op1
+	 * @param {SCarg} args.op2
+	 * @param {SCarg} args.logic
+	 * @returns {boolean}
+	 */
 	compareTwoSidesPlus(args) {
 		switch (args.logic) {
 			case 'or':
@@ -1996,7 +2270,12 @@ class ArkosExtensions {
 		}
 	}
 
-	//数组排序规则
+	/**
+	 * 数组排序规则（生成排序函数）
+	 * @param {string} propName 属性名称
+	 * @param {'asc'|'desc'} order 排序方式
+	 * @returns {(a: {[key: string]: SCarg}, b: {[key: string]: SCarg}) => number}
+	 */
 	sortRule(propName, order) {
 		return (a, b) => {
 			a = a[propName]
@@ -2027,6 +2306,10 @@ class ArkosExtensions {
 		return list;
 	}
 
+	/**
+	 * 如果排序表不存在就建立一个
+	 * @param {SCarg} list
+	 */
 	createTableIfNotExist(list) {
 		if(!(list in this.sortedTable))
 			this.sortedTable[list] = {
@@ -2035,24 +2318,45 @@ class ArkosExtensions {
 			};
 	}
 
+	/**
+	 * 排序某个排序表
+	 * @param {SCarg} list 排序表名称
+	 */
 	sortTable(list) {
 		this.sortedTable[list].list.sort(this.sortRule("rankValue", this.sortedTable[list].order));
 	}
 
-	//📊清空排序表
+	/**
+	 * 📊清空排序表
+	 * @param {object} args
+	 * @param {SCarg} args.list
+	 * @returns {void}
+	 */
 	clearSortedTable(args) {
 		this.createTableIfNotExist(args.list)
 		this.sortedTable[args.list].list = [];
 	}
 
-	//📊设置排序方式
+	/**
+	 * 📊设置排序方式
+	 * @param {object} args
+	 * @param {SCarg} args.list
+	 * @param {SCarg} args.type
+	 * @returns {void}
+	 */
 	setTypeOfSortedTable(args) {
 		this.createTableIfNotExist(args.list)
 		this.sortedTable[args.list].order = args.type;
 		this.sortTable(args.list)
 	}
 
-	//查找在列表中的插入位置（已有则覆盖）
+	/**
+	 * 查找在列表中的插入位置（已有则覆盖）
+	 * @param {SortedTableItem[]} list 排序表
+	 * @param {'asc'|'desc'} order 排序方式
+	 * @param {SortedTableItem} item 要插入的项目
+	 * @returns {void}
+	 */
 	_findPlaceAndInsert(list, order, item) {
 		//删除已存在的内容
 		for(let i = 0; i < list.length; i++) {
@@ -2075,7 +2379,15 @@ class ArkosExtensions {
 		list.push(item);
 	}
 
-	//📊将内容加入表
+	/**
+	 * 📊将XX加入排序表
+	 * @param {object} args
+	 * @param {SCarg} args.list
+	 * @param {SCarg} args.name
+	 * @param {SCarg} args.value
+	 * @param {SCarg} args.extra
+	 * @returns {void}
+	 */
 	addToSortedTable(args) {
 		this.createTableIfNotExist(args.list)
 		this._findPlaceAndInsert(
@@ -2087,6 +2399,13 @@ class ArkosExtensions {
 			});
 	}
 
+	/**
+	 * 获取项目的属性
+	 * @param {SortedTableItem} item 项目
+	 * @param {SCarg} t 属性
+	 * @param {number} rank 排名
+	 * @returns {SCarg}
+	 */
 	_getTInItem(item, t, rank) {
 		if(item === undefined) return '';
 		switch (t) {
@@ -2103,13 +2422,26 @@ class ArkosExtensions {
 		}
 	}
 
-	//📊获取第n项
+	/**
+	 * 📊获取排序表第n项
+	 * @param {object} args
+	 * @param {SCarg} args.list
+	 * @param {SCarg} args.n
+	 * @param {SCarg} args.t
+	 * @returns {SCarg}
+	 */
 	getFromSortedTableByNo(args) {
 		if(!(args.list in this.sortedTable)) return '';
 		let list = this.sortedTable[args.list].list;
 		return this._getTInItem(list[args.n - 1], args.t, Cast.toNumber(args.n));
 	}
 
+	/**
+	 * 获取第一个指定名称的编号
+	 * @param {SortedTableItem[]} list 排序表
+	 * @param {SCarg} name
+	 * @returns {number}
+	 */
 	_getItemIdxByName(list, name) {
 		for(let i = 0; i < list.length; i++) {
 			if(list[i].name === name) {
@@ -2119,7 +2451,14 @@ class ArkosExtensions {
 		return -1;
 	}
 
-	//📊获取名为XX的项
+	/**
+	 * 📊获取排序表特定名字内容
+	 * @param {object} args
+	 * @param {SCarg} args.list
+	 * @param {SCarg} args.name
+	 * @param {SCarg} args.t
+	 * @returns {SCarg}
+	 */
 	getFromSortedTableByName(args) {
 		if(!(args.list in this.sortedTable)) return '';
 		let list = this.sortedTable[args.list].list;
@@ -2128,13 +2467,24 @@ class ArkosExtensions {
 		return this._getTInItem(list[n], args.t, n + 1);
 	}
 
-	//📊获取排序表长度
+	/**
+	 * 📊获取排序表长度
+	 * @param {object} args
+	 * @param {SCarg} args.list
+	 * @returns {number}
+	 */
 	lengthOfSortedTable(args) {
 		if(!(args.list in this.sortedTable)) return 0;
 		return this.sortedTable[args.list].list.length;
 	}
 
-	//📊删除排序表名为XX的内容
+	/**
+	 * 📊删除排序表名为XX的内容
+	 * @param {object} args
+	 * @param {SCarg} args.list
+	 * @param {SCarg} args.name
+	 * @returns {void}
+	 */
 	deleteNameOfSortedTable(args) {
 		if(!(args.list in this.sortedTable)) return;
 		let list = this.sortedTable[args.list].list;
@@ -2143,7 +2493,13 @@ class ArkosExtensions {
 		list.splice(n, 1);
 	}
 
-	//获取颜色HEX码
+	/**
+	 * 获取颜色HEX码
+	 * @param {object} args
+	 * @param {SCarg} args.COLOR
+	 * @param {Util} util
+	 * @returns {string}
+	 */
 	colorToHex(args, util) {
 		let c = Cast.toRgbColorList(args.COLOR)
 		return Color.rgbToHex({
@@ -2156,7 +2512,11 @@ class ArkosExtensions {
 
 	//🗂️ 临时变量积木
 
-	//来自 -6 ：任意内容转字符或数字
+	/**
+	 * 来自 -6 ：任意内容转字符或数字
+	 * @param {unknown} value
+	 * @returns {string|number}
+	 */
 	_anythingToNumberString(value) {
 		switch (typeof(value)) {
 			case "string":
@@ -2171,42 +2531,98 @@ class ArkosExtensions {
 		return value;
 	}
 
+	/**
+	 * 清空所有临时数据
+	 * @param {object} args
+	 * @returns {void}
+	 */
+	// @ts-ignore 不需要使用 args
 	deleteAllTempData(args) {
 		this.tempData = {};
 	}
 
+	/**
+	 * 临时数据量
+	 * @param {object} args
+	 * @returns {number}
+	 */
+	// @ts-ignore 不需要使用 args
 	getCountOfTempData(args) {
 		return Object.keys(this.tempData)
 			.length;
 	}
 
+	/**
+	 * 删除临时数据
+	 * @param {object} args
+	 * @param {SCarg} args.data
+	 * @returns {void}
+	 */
 	delTempData(args) {
 		delete this.tempData[Cast.toString(args.data)];
 	}
 
+	/**
+	 * 判断数据存在
+	 * @param {object} args
+	 * @param {SCarg} args.data
+	 * @returns {boolean}
+	 */
 	ifTempDataExist(args) {
 		return this.tempData.hasOwnProperty(Cast.toString(args.data))
 	}
 
+	/**
+	 * 设置临时数据
+	 * @param {object} args
+	 * @param {SCarg} args.var
+	 * @param {SCarg} args.t
+	 * @returns {void}
+	 */
 	setTempVar(args) {
 		this.tempData[Cast.toString(args.var)] = args.t;
 	}
 
+	/**
+	 * 增加临时数据
+	 * @param {object} args
+	 * @param {SCarg} args.var
+	 * @param {SCarg} args.t
+	 * @returns {void}
+	 */
 	addTempVar(args) {
 		this.tempData[Cast.toString(args.var)] = Cast.toNumber(this.tempData[Cast.toString(args.var)]) + Cast.toNumber(args.t);
 	}
 
+	/**
+	 * 获取临时数据
+	 * @param {object} args
+	 * @param {SCarg} args.var
+	 * @returns {SCarg}
+	 */
 	getTempVar(args) {
 		let temp = this.tempData[Cast.toString(args.var)]
 		if(typeof(temp) === 'object') return JSON.stringify(temp);
 		return Cast.toString(temp);
 	}
 
-	//创建或清空
+	/**
+	 * 创建或清空临时列表
+	 * @param {object} args
+	 * @param {SCarg} args.list
+	 * @returns {void}
+	 */
 	clearTempList(args) {
 		this.tempData[Cast.toString(args.list)] = [];
 	}
 
+	/**
+	 * 设置临时列表
+	 * @param {object} args
+	 * @param {SCarg} args.list
+	 * @param {SCarg} args.t
+	 * @returns {void}
+	 */
 	initTempList(args) {
 		try {
 			let content = JSON.parse(Cast.toString(args.t))
@@ -2218,12 +2634,28 @@ class ArkosExtensions {
 		}
 	}
 
+	/**
+	 * 向临时列表加入
+	 * @param {object} args
+	 * @param {SCarg} args.list
+	 * @param {SCarg} args.t
+	 * @returns {void}
+	 */
 	addTempList(args) {
 		let list = this.tempData[Cast.toString(args.list)]
 		if(!Array.isArray(list)) return;
 		list.push(Cast.toString(args.t));
 	}
 
+	/**
+	 * 操作临时列表
+	 * @param {object} args
+	 * @param {SCarg} args.list
+	 * @param {SCarg} args.op
+	 * @param {SCarg} args.n
+	 * @param {SCarg} args.t
+	 * @returns {void}
+	 */
 	opTempList(args) {
 		let list = this.tempData[Cast.toString(args.list)]
 		if(!Array.isArray(list)) return;
@@ -2245,6 +2677,13 @@ class ArkosExtensions {
 		}
 	}
 
+	/**
+	 * 删除临时列表XX项
+	 * @param {object} args
+	 * @param {SCarg} args.list
+	 * @param {SCarg} args.n
+	 * @returns {void}
+	 */
 	delItemOfTempList(args) {
 		let list = this.tempData[Cast.toString(args.list)]
 		if(!Array.isArray(list)) return;
@@ -2254,6 +2693,13 @@ class ArkosExtensions {
 		list.splice(n, 1);
 	}
 
+	/**
+	 * 获取临时列表XX项
+	 * @param {object} args
+	 * @param {SCarg} args.list
+	 * @param {SCarg} args.n
+	 * @returns {SCarg}
+	 */
 	getItemOfTempList(args) {
 		let list = this.tempData[Cast.toString(args.list)]
 		if(!Array.isArray(list)) return '';
@@ -2263,13 +2709,24 @@ class ArkosExtensions {
 		return Cast.toString(list[n]);
 	}
 
+	/**
+	 * 临时列表长度
+	 * @param {object} args
+	 * @param {SCarg} args.list
+	 * @returns {number}
+	 */
 	lengthOfTempList(args) {
 		let list = this.tempData[Cast.toString(args.list)]
 		if(!Array.isArray(list)) return 0;
 		return list.length;
 	}
 
-	//检查list是否包含item
+	/**
+	 * 检查list是否包含item
+	 * @param {SCarg[]} list
+	 * @param {SCarg} item
+	 * @returns {boolean}
+	 */
 	_ifListItemExist(list, item) {
 		if (list.indexOf(item) >= 0) {
             return true;
@@ -2284,6 +2741,13 @@ class ArkosExtensions {
 		return false;
 	}
 
+	/**
+	 * 临时列表包含xx?
+	 * @param {object} args
+	 * @param {SCarg} args.list
+	 * @param {SCarg} args.c
+	 * @returns {boolean}
+	 */
 	ifListItemExist(args) {
 		let list = this.tempData[Cast.toString(args.list)]
 		if(!Array.isArray(list)) return false;
@@ -2292,7 +2756,12 @@ class ArkosExtensions {
 		return this._ifListItemExist(list, item)
 	}
 
-	//获取list中item索引
+	/**
+	 * 检查list是否包含item
+	 * @param {SCarg[]} list
+	 * @param {SCarg} item
+	 * @returns {number}
+	 */
 	_getListItemIdx(list, item) {
 		for (let i = 0; i < list.length; i++) {
             if (Cast.compare(list[i], item) === 0) {
@@ -2302,6 +2771,13 @@ class ArkosExtensions {
 		return 0;
 	}
 
+	/**
+	 * 获取列表第一个xx的索引
+	 * @param {object} args
+	 * @param {SCarg} args.list
+	 * @param {SCarg} args.c
+	 * @returns {number}
+	 */
 	getListItemIdx(args) {
 		let list = this.tempData[Cast.toString(args.list)]
 		if(!Array.isArray(list)) return 0;
@@ -2311,11 +2787,23 @@ class ArkosExtensions {
 		
 	}
 
-	//容器
+	/**
+	 * 创建或清空临时容器
+	 * @param {object} args
+	 * @param {SCarg} args.con
+	 * @returns {void}
+	 */
 	clearTempCon(args) {
 		this.tempData[Cast.toString(args.con)] = {};
 	}
 
+	/**
+	 * 设置临时容器
+	 * @param {object} args
+	 * @param {SCarg} args.con
+	 * @param {SCarg} args.t
+	 * @returns {void}
+	 */
 	initTempCon(args) {
 		try {
 			let content = JSON.parse(Cast.toString(args.t))
@@ -2327,6 +2815,15 @@ class ArkosExtensions {
 		}
 	}
 
+	/**
+	 * 操作临时容器
+	 * @param {object} args
+	 * @param {SCarg} args.con
+	 * @param {SCarg} args.op
+	 * @param {SCarg} args.c
+	 * @param {SCarg} args.t
+	 * @returns {void}
+	 */
 	opTempCon(args) {
 		let con = this.tempData[Cast.toString(args.con)]
 		if(!(typeof(con) === 'object' && !Array.isArray(con) && con !== null)) return;
@@ -2344,18 +2841,40 @@ class ArkosExtensions {
 		}
 	}
 
+	/**
+	 * 删除临时容器名为xx的内容
+	 * @param {object} args
+	 * @param {SCarg} args.con
+	 * @param {SCarg} args.c
+	 * @returns {void}
+	 */
 	delItemOfTempCon(args) {
 		let con = this.tempData[Cast.toString(args.con)]
 		if(!(typeof(con) === 'object' && !Array.isArray(con) && con !== null)) return;
 		delete con[Cast.toString(args.c)];
 	}
 
+	/**
+	 * 获取临时容器名为XX的内容
+	 * @param {object} args
+	 * @param {SCarg} args.con
+	 * @param {SCarg} args.c
+	 * @returns {SCarg}
+	 */
 	getItemOfTempConByName(args) {
 		let con = this.tempData[Cast.toString(args.con)]
 		if(!(typeof(con) === 'object' && !Array.isArray(con) && con !== null)) return '';
 		return Cast.toString(con[Cast.toString(args.c)]);
 	}
 
+	/**
+	 * 获取临时容器第n项的xx
+	 * @param {object} args
+	 * @param {SCarg} args.con
+	 * @param {SCarg} args.n
+	 * @param {SCarg} args.t
+	 * @returns {SCarg}
+	 */
 	getItemOfTempConByNo(args) {
 		let con = this.tempData[Cast.toString(args.con)]
 		if(!(typeof(con) === 'object' && !Array.isArray(con) && con !== null)) return '';
@@ -2371,12 +2890,25 @@ class ArkosExtensions {
 		}
 	}
 
+	/**
+	 * 临时容器长度
+	 * @param {object} args
+	 * @param {SCarg} args.con
+	 * @returns {number}
+	 */
 	lengthOfTempCon(args) {
 		let con = this.tempData[Cast.toString(args.con)]
 		if(!(typeof(con) === 'object' && con !== null)) return 0;
 		return Object.keys(con).length;
 	}
 
+	/**
+	 * ifConItemExist
+	 * @param {object} args
+	 * @param {SCarg} args.con
+	 * @param {SCarg} args.c
+	 * @returns {boolean}
+	 */
 	ifConItemExist(args) {
 		let con = this.tempData[Cast.toString(args.con)]
 		if(!(typeof(con) === 'object' && con !== null)) return false;
@@ -2403,14 +2935,32 @@ class ArkosExtensions {
 	//
 	//角色造型操作
 	//
+
+	/**
+	 * 清除镜像
+	 * @returns {void}
+	 */
 	clearMirror(){
 		console.warn("镜像积木已下线，请使用新积木\nMirror block is offline, please use new blocks.");
 	}
 
+	/**
+	 * 定向缩放
+	 * @param {object} args
+	 * @param {SCarg} args.mirrorMethod
+	 * @returns {void}
+	 */
 	mirrorSprite(){
 		console.warn("镜像积木已下线，请使用新积木\nMirror block is offline, please use new blocks.");
 	}
 
+	/**
+	 * 获取缩放
+	 * @param {object} args
+	 * @param {SCarg} args.input
+	 * @param {Util} util
+	 * @returns {number}
+	 */
 	getScale(args, util) {
 		let drawable = this.runtime.renderer._allDrawables[util.target.drawableID]
 		if(!drawable.ext30_scale) return 1
@@ -2418,6 +2968,12 @@ class ArkosExtensions {
 		else return drawable.ext30_scale[0]
 	}
 	
+	/**
+	 * 拉伸造型
+	 * @param {0|1} index 宽0/高1
+	 * @param {number} value 缩放比例
+	 * @param {Util} util
+	 */
 	scaleSprite(index, value, util) {
 		let target = util.target;
 		let drawable = this.runtime.renderer._allDrawables[target.drawableID];
@@ -2427,7 +2983,7 @@ class ArkosExtensions {
 			//注入修改函数
 			let old_fun = drawable.__proto__.updateScale;
 			Object.defineProperty(drawable, "updateScale" ,
-				{value: function(scale) {
+				{value: function(/** @type {[number, number]} */ scale) {
 					this.ext30_rawSize = scale[0];
 					scale[0] = this.ext30_rawSize * this.ext30_scale[0];
 					scale[1] = this.ext30_rawSize * this.ext30_scale[1];
@@ -2439,18 +2995,50 @@ class ArkosExtensions {
 		//更新
 		drawable.updateScale([target.size, target.size]);
 	}
+
+	/**
+	 * x向缩放
+	 * @param {object} args
+	 * @param {SCarg} args.input
+	 * @param {Util} util
+	 * @returns {void}
+	 */
 	scaleSpriteX(args, util) {
 		this.scaleSprite(0, args.input, util);
 	}
+
+	/**
+	 * y向缩放
+	 * @param {object} args
+	 * @param {SCarg} args.input
+	 * @param {Util} util
+	 * @returns {void}
+	 */
 	scaleSpriteY(args, util) {
 		this.scaleSprite(1, args.input, util);
 	}
 	//
 	//图层操作
 	//
+
+	/**
+	 * 获取图层
+	 * @param {object} args
+	 * @param {Util} util
+	 * @returns {number}
+	 */
+	// @ts-ignore 不需要使用 args
 	getLayer(args, util) {
 		return util.target.getLayerOrder();
 	}
+
+	/**
+	 * 设置图层
+	 * @param {object} args
+	 * @param {SCarg} args.input
+	 * @param {Util} util
+	 * @returns {void}
+	 */
 	setLayer(args, util) {
 		util.target.renderer.setDrawableOrder(util.target.drawableID, args.input, 'sprite');
 	}
