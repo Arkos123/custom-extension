@@ -1809,9 +1809,9 @@ class ArkosExtensions {
 	 * @returns {number}
 	 */
 	getEffect(args, util) {
-		let effect = Cast.toString(args.EFFECT)
+		const effect = Cast.toString(args.EFFECT)
 			.toLowerCase();
-		if(!util.target.effects.hasOwnProperty(effect)) return 0;
+		if(!Object.prototype.hasOwnProperty.call(util.target.effects, effect)) return 0;
 		return util.target.effects[effect];
 	}
 
@@ -2049,8 +2049,8 @@ class ArkosExtensions {
 	 * @returns {SCarg}
 	 */
 	binaryCal(args){
-		let a = Cast.toNumber(args.a)
-		let b = Cast.toNumber(args.b)
+		const a = Cast.toNumber(args.a)
+		const b = Cast.toNumber(args.b)
 		switch (args.cal) {
 			case '1':
 				return (Cast.compare(args.a, args.b) > 0) ? args.a : args.b; //max
@@ -2103,7 +2103,7 @@ class ArkosExtensions {
 	 * @returns {-1|1}
 	 */
 	sgn(args){
-		let c = Cast.toNumber(args.c)
+		const c = Cast.toNumber(args.c)
 		return c<0 ? -1 : 1; 
 	}
 
@@ -2114,7 +2114,7 @@ class ArkosExtensions {
 	 * @returns {boolean}
 	 */
 	probability(args){
-		let p = Cast.toNumber(args.p)
+		const p = Cast.toNumber(args.p)
 		if(p===1) return true;
 		if(p===0) return false;
 		return (Math.random() < p)? true : false;
@@ -2130,7 +2130,7 @@ class ArkosExtensions {
 	 */
 	getKeyDown (args, util) {
 		let flag = false
-		let pressed =  util.ioQuery('keyboard', 'getKeyIsDown', [args.key]);
+		const pressed =  util.ioQuery('keyboard', 'getKeyIsDown', [args.key]);
 		if(!this.lastKeyPressed[Cast.toString(args.key)] && pressed) flag = true; //这一帧按下，且上一帧未按下
 		this.lastKeyPressed[Cast.toString(args.key)] = pressed
 		return flag;
@@ -2162,7 +2162,7 @@ class ArkosExtensions {
 	 * @returns {boolean}
 	 */
 	contain(args) {
-		let list = Cast.toString(args.list).split(Cast.toString(args.ch))
+		const list = Cast.toString(args.list).split(Cast.toString(args.ch))
 		return this._ifListItemExist(list, Cast.toString(args.c))
 	}
 
@@ -2174,7 +2174,7 @@ class ArkosExtensions {
 	 */
 	lenOfJSONList(args) {
 		try {
-			let list = JSON.parse(Cast.toString(args.list))
+			const list = JSON.parse(Cast.toString(args.list))
 			if(typeof(list) === 'object' && list !== null) {
 				return Object.keys(list).length;
 			}
@@ -2194,7 +2194,7 @@ class ArkosExtensions {
 	 */
 	JSONListContains(args) {
 		try {
-			let list = JSON.parse(Cast.toString(args.list))
+			const list = JSON.parse(Cast.toString(args.list))
 			if(Array.isArray(list)) {
 				return this._ifListItemExist(list, Cast.toString(args.c));
 			}
@@ -2214,7 +2214,7 @@ class ArkosExtensions {
 	 */
 	editJSONList(args) {
 		try {
-			let list = JSON.parse(Cast.toString(args.list))
+			const list = JSON.parse(Cast.toString(args.list))
 			if(Array.isArray(list)) {
 				const item = this._anythingToNumberString(args.c)
 				if(args.type === '1') //加入列表
@@ -2290,7 +2290,7 @@ class ArkosExtensions {
 	//查找所有排序表
 	findAllSortedTable() {
 		const list = [];
-		let temp = this.sortedTable;
+		const temp = this.sortedTable;
 		Object.keys(temp)
 			.forEach(obj => {
 				//if ( Array.isArray (temp[obj]) ) {
@@ -2448,7 +2448,7 @@ class ArkosExtensions {
 	 */
 	getFromSortedTableByNo(args) {
 		const listname = Cast.toString(args.list);
-		let list = this.sortedTable[listname];
+		const list = this.sortedTable[listname];
 		if(list === undefined) {
 			return '';
 		}
@@ -2499,11 +2499,11 @@ class ArkosExtensions {
 	 */
 	getFromSortedTableByName(args) {
 		const listname = Cast.toString(args.list);
-		let table = this.sortedTable[listname];
+		const table = this.sortedTable[listname];
 		if(table === undefined) return '';
-		let idx_item = this._getItemAndIdxByName(table.list, args.name);
+		const idx_item = this._getItemAndIdxByName(table.list, args.name);
 		if(idx_item === undefined) return '';
-		let [n, item] = idx_item;
+		const [n, item] = idx_item;
 		return this._getTInItem(item, args.t, n + 1);
 	}
 
@@ -2515,7 +2515,7 @@ class ArkosExtensions {
 	 */
 	lengthOfSortedTable(args) {
 		const listname = Cast.toString(args.list);
-		let table = this.sortedTable[listname];
+		const table = this.sortedTable[listname];
 		if(table === undefined) return 0;
 		return table.list.length;
 	}
@@ -2529,9 +2529,9 @@ class ArkosExtensions {
 	 */
 	deleteNameOfSortedTable(args) {
 		const listname = Cast.toString(args.list);
-		let table = this.sortedTable[listname];
+		const table = this.sortedTable[listname];
 		if(table === undefined) return;
-		let n = this._getItemIdxByName(table.list, args.name);
+		const n = this._getItemIdxByName(table.list, args.name);
 		if(n === -1) return;
 		table.list.splice(n, 1);
 	}
@@ -2543,7 +2543,7 @@ class ArkosExtensions {
 	 * @returns {string}
 	 */
 	colorToHex(args) {
-		let c = Cast.toRgbColorList(args.COLOR)
+		const c = Cast.toRgbColorList(args.COLOR)
 		return Color.rgbToHex({
 			r: c[0] ?? 0,
 			g: c[1] ?? 0,
@@ -2609,7 +2609,7 @@ class ArkosExtensions {
 	 * @returns {boolean}
 	 */
 	ifTempDataExist(args) {
-		return this.tempData.hasOwnProperty(Cast.toString(args.data))
+		return Object.prototype.hasOwnProperty.call(this.tempData, Cast.toString(args.data));
 	}
 
 	/**
@@ -2641,7 +2641,7 @@ class ArkosExtensions {
 	 * @returns {SCarg}
 	 */
 	getTempVar(args) {
-		let temp = this.tempData[Cast.toString(args.var)]
+		const temp = this.tempData[Cast.toString(args.var)]
 		if(typeof(temp) === 'object') return JSON.stringify(temp);
 		return Cast.toString(temp);
 	}
@@ -2665,12 +2665,14 @@ class ArkosExtensions {
 	 */
 	initTempList(args) {
 		try {
-			let content = JSON.parse(Cast.toString(args.t))
+			const content = JSON.parse(Cast.toString(args.t))
 			if(Array.isArray(content)) {
 				this.tempData[Cast.toString(args.list)] = content;
+			} else {
+				console.warn("设置临时列表失败");
 			}
 		} catch (e) {
-
+			console.warn("设置临时列表失败", e);
 		}
 	}
 
@@ -2682,7 +2684,7 @@ class ArkosExtensions {
 	 * @returns {void}
 	 */
 	addTempList(args) {
-		let list = this.tempData[Cast.toString(args.list)]
+		const list = this.tempData[Cast.toString(args.list)]
 		if(!Array.isArray(list)) return;
 		list.push(Cast.toString(args.t));
 	}
@@ -2697,7 +2699,7 @@ class ArkosExtensions {
 	 * @returns {void}
 	 */
 	opTempList(args) {
-		let list = this.tempData[Cast.toString(args.list)]
+		const list = this.tempData[Cast.toString(args.list)]
 		if(!Array.isArray(list)) return;
 		let n = Cast.toNumber(args.n)
 		if(n < 1 || n > list.length + 1) return;
@@ -2725,7 +2727,7 @@ class ArkosExtensions {
 	 * @returns {void}
 	 */
 	delItemOfTempList(args) {
-		let list = this.tempData[Cast.toString(args.list)]
+		const list = this.tempData[Cast.toString(args.list)]
 		if(!Array.isArray(list)) return;
 		let n = Cast.toNumber(args.n)
 		if(n < 1 || n > list.length) return;
@@ -2741,7 +2743,7 @@ class ArkosExtensions {
 	 * @returns {SCarg}
 	 */
 	getItemOfTempList(args) {
-		let list = this.tempData[Cast.toString(args.list)]
+		const list = this.tempData[Cast.toString(args.list)]
 		if(!Array.isArray(list)) return '';
 		let n = Cast.toNumber(args.n)
 		if(n < 1 || n > list.length) return '';
@@ -2756,7 +2758,7 @@ class ArkosExtensions {
 	 * @returns {number}
 	 */
 	lengthOfTempList(args) {
-		let list = this.tempData[Cast.toString(args.list)]
+		const list = this.tempData[Cast.toString(args.list)]
 		if(!Array.isArray(list)) return 0;
 		return list.length;
 	}
@@ -2789,7 +2791,7 @@ class ArkosExtensions {
 	 * @returns {boolean}
 	 */
 	ifListItemExist(args) {
-		let list = this.tempData[Cast.toString(args.list)]
+		const list = this.tempData[Cast.toString(args.list)]
 		if(!Array.isArray(list)) return false;
 		const item = Cast.toString(args.c)
 
@@ -2819,7 +2821,7 @@ class ArkosExtensions {
 	 * @returns {number}
 	 */
 	getListItemIdx(args) {
-		let list = this.tempData[Cast.toString(args.list)]
+		const list = this.tempData[Cast.toString(args.list)]
 		if(!Array.isArray(list)) return 0;
 		const item = Cast.toString(args.c)
 
@@ -2846,12 +2848,14 @@ class ArkosExtensions {
 	 */
 	initTempCon(args) {
 		try {
-			let content = JSON.parse(Cast.toString(args.t))
+			const content = JSON.parse(Cast.toString(args.t))
 			if(typeof(content) === 'object' && content !== null) {
 				this.tempData[Cast.toString(args.con)] = content;
+			} else {
+				console.warn("设置临时容器失败");
 			}
 		} catch (e) {
-
+			console.warn("设置临时容器失败", e);
 		}
 	}
 
@@ -2865,9 +2869,9 @@ class ArkosExtensions {
 	 * @returns {void}
 	 */
 	opTempCon(args) {
-		let con = this.tempData[Cast.toString(args.con)]
+		const con = this.tempData[Cast.toString(args.con)]
 		if(!(typeof(con) === 'object' && !Array.isArray(con) && con !== null)) return;
-		let c = Cast.toString(args.c)
+		const c = Cast.toString(args.c)
 		switch (args.op) {
 			case '1': //设为
 				con[c] = args.t;
@@ -2889,7 +2893,7 @@ class ArkosExtensions {
 	 * @returns {void}
 	 */
 	delItemOfTempCon(args) {
-		let con = this.tempData[Cast.toString(args.con)]
+		const con = this.tempData[Cast.toString(args.con)]
 		if(!(typeof(con) === 'object' && !Array.isArray(con) && con !== null)) return;
 		delete con[Cast.toString(args.c)];
 	}
@@ -2902,9 +2906,9 @@ class ArkosExtensions {
 	 * @returns {SCarg}
 	 */
 	getItemOfTempConByName(args) {
-		let con = this.tempData[Cast.toString(args.con)]
+		const con = this.tempData[Cast.toString(args.con)]
 		if(!(typeof(con) === 'object' && !Array.isArray(con) && con !== null)) return '';
-		return Cast.toString(con[Cast.toString(args.c)]);
+		return this._anythingToNumberString(con[Cast.toString(args.c)]);
 	}
 
 	/**
@@ -2916,9 +2920,9 @@ class ArkosExtensions {
 	 * @returns {SCarg}
 	 */
 	getItemOfTempConByNo(args) {
-		let con = this.tempData[Cast.toString(args.con)]
+		const con = this.tempData[Cast.toString(args.con)]
 		if(!(typeof(con) === 'object' && !Array.isArray(con) && con !== null)) return '';
-		let key = Object.keys(con)[Cast.toNumber(args.n) - 1]
+		const key = Object.keys(con)[Cast.toNumber(args.n) - 1]
 		if(key === undefined) return '';
 		switch (args.t) {
 			case '1': //名称
@@ -2937,7 +2941,7 @@ class ArkosExtensions {
 	 * @returns {number}
 	 */
 	lengthOfTempCon(args) {
-		let con = this.tempData[Cast.toString(args.con)]
+		const con = this.tempData[Cast.toString(args.con)]
 		if(!(typeof(con) === 'object' && con !== null)) return 0;
 		return Object.keys(con).length;
 	}
@@ -2950,9 +2954,9 @@ class ArkosExtensions {
 	 * @returns {boolean}
 	 */
 	ifConItemExist(args) {
-		let con = this.tempData[Cast.toString(args.con)]
+		const con = this.tempData[Cast.toString(args.con)]
 		if(!(typeof(con) === 'object' && con !== null)) return false;
-		return con.hasOwnProperty(Cast.toString(args.c));
+		return Object.prototype.hasOwnProperty.call(con, Cast.toString(args.c));
 	}
 
 
@@ -2963,15 +2967,15 @@ class ArkosExtensions {
 	//动态菜单: 角色菜单
 	getSpritesMenu() {
 		var sprites = [];
-		for(const targetId in this.runtime.targets) {
-			if(!this.runtime.targets.hasOwnProperty(targetId)) continue;
-			if(!this.runtime.targets[targetId].isOriginal) continue;
-			if(this.runtime.targets[targetId] === this.runtime._editingTarget) continue; //排除自己
-			let name = this.runtime.targets[targetId].sprite.name;
+		for(const target of Object.values(this.runtime.targets)) {
+			if(!target.isOriginal) continue;
+			if(target === this.runtime._editingTarget) continue; //排除自己
+			const name = target.sprite.name;
 			sprites.push(name); //['Stage','角色1','角色2'] Stage暂时懒得换成中文
 		}
 		return sprites;
 	}
+
 	//
 	//角色造型操作
 	//
@@ -3002,7 +3006,7 @@ class ArkosExtensions {
 	 * @returns {number}
 	 */
 	getScale(args, util) {
-		let drawable = this.runtime.renderer._allDrawables[util.target.drawableID]
+		const drawable = this.runtime.renderer._allDrawables[util.target.drawableID]
 		if(!drawable.ext30_scale) return 1
 		else if(args.input === 'v') return drawable.ext30_scale[1]
 		else return drawable.ext30_scale[0]
@@ -3015,13 +3019,13 @@ class ArkosExtensions {
 	 * @param {Util} util
 	 */
 	scaleSprite(index, value, util) {
-		let target = util.target;
-		let drawable = this.runtime.renderer._allDrawables[target.drawableID];
+		const target = util.target;
+		const drawable = this.runtime.renderer._allDrawables[target.drawableID];
 		if(!drawable.ext30_scale) {
 			drawable.ext30_scale = [1,1];
 			drawable.ext30_rawScale = drawable.scale;
 			//注入修改函数
-			let old_fun = drawable.__proto__.updateScale;
+			const old_fun = drawable.__proto__.updateScale;
 			Object.defineProperty(drawable, "updateScale" ,
 				{value: function(/** @type {[number, number]} */ scale) {
 					this.ext30_rawSize = scale[0];
