@@ -9,7 +9,7 @@ import Cast from '../utils/cast.js'
 // console.log(Cast.toNumber('123'))
 //console.log(Cast.toNumber('aab'))
 
-let LZString = _LZString();
+const LZString = _LZString();
 
 /** @typedef {string|number|boolean} SCarg 来自Scratch圆形框的参数，虽然这个框可能只能输入数字，但是可以放入变量，因此有可能获得数字和文本，需要同时处理 */
 
@@ -596,7 +596,7 @@ class Archive_code {
 
   findAllContainer() {
     const list = [];
-    let temp = this.content;
+    const temp = this.content;
     Object.keys(temp).forEach(obj => {
       //if ( Array.isArray (temp[obj]) ) {
         list.push(obj);
@@ -613,11 +613,18 @@ class Archive_code {
 
   /**
    * 创建容器，如果不存在
-   * @param {SCarg} con
+   * @param {string} con
+   * @returns {Container}
    */
-  _createContainerIfNotExist(con){
-    if(!(con in this.content))
-      this.content[con]={};
+  _getOrCreateContainer(con){
+    const content = this.content[con];
+    if(content === undefined) {
+      /** @type {Container} */
+      const newcontent = {};
+      this.content[con] = newcontent;
+      return newcontent;
+    }
+    return content;
   }
 
   /**
@@ -627,8 +634,7 @@ class Archive_code {
    * @returns {void}
    */
   clearContainer(args) {
-    this._createContainerIfNotExist(args.con)
-    this.content[args.con] = {};
+    this.content[Cast.toString(args.con)] = {};
   }
 
   /**
@@ -638,8 +644,9 @@ class Archive_code {
    * @returns {string}
    */
   containerToJSON(args) {
-    if(!(args.con in this.content)) return '';
-    return JSON.stringify(this.content[args.con]);
+    const content = this.content[Cast.toString(args.con)];
+    if(content === undefined) return '';
+    return JSON.stringify(content);
   }
 
   /**
@@ -651,8 +658,9 @@ class Archive_code {
    * @returns {void}
    */
   addContentToContainer(args) {
-    if(!(args.con in this.content)) return;
-    this.content[args.con][args.name] = args.value;
+    const content = this.content[Cast.toString(args.con)];
+    if(content === undefined) return;
+    content[Cast.toString(args.name)] = args.value;
   }
 
   /**
@@ -665,10 +673,11 @@ class Archive_code {
    * @returns {void}
    */
   addVariableToContainer(args, util) {
-    if(!(args.con in this.content)) return;
+    const content = this.content[Cast.toString(args.con)];
+    if(content === undefined) return;
     if (args.var !== 'empty') {
       const variable = util.target.lookupVariableById(args.var);
-      this.content[args.con][args.name] = variable.value;
+      content[Cast.toString(args.name)] = variable.value;
     }
   }
 
@@ -682,10 +691,11 @@ class Archive_code {
    * @returns {void}
    */
   addListToContainer(args, util) {
-    if(!(args.con in this.content)) return;
+    const content = this.content[Cast.toString(args.con)];
+    if(content === undefined) return;
     if (args.list !== 'empty') {
       const list = util.target.lookupVariableById(args.list);
-      this.content[args.con][args.name] = list.value;
+      content[String(args.name)] = list.value;
     }
   }
   
@@ -702,7 +712,7 @@ class Archive_code {
     try {
       content = JSON.parse(Cast.toString(args.container))
       if(typeof(content) === 'object' && !Array.isArray(content) && content !== null) {
-        return this._anythingToNumberString(content[args.key]);
+        return this._anythingToNumberString(content[Cast.toString(args.key)]);
       }else{
         return ''
       }
@@ -719,18 +729,19 @@ class Archive_code {
    * @returns {void}
    */
   parseJSONToContainer(args) {
-    this._createContainerIfNotExist(args.con)
-    let content;
     this.convertedSuccessfully = false;
     try {
       // 如果解析失败，不要修改content。
-      content = JSON.parse(Cast.toString(args.code))
+      const content = JSON.parse(Cast.toString(args.code))
       // 考虑数组[]情况。
       if(typeof(content) === 'object' && !Array.isArray(content) && content !== null) {
-        this.content[args.con] = content;
+        this.content[Cast.toString(args.con)] = content;
         this.convertedSuccessfully = true;
+      } else {
+        console.warn("解析容器失败");
       }
     } catch (e) {
+      console.warn("解析容器失败", e);
       //this.content2 = {}
     }
     //console.log(typeof this.content)
@@ -752,8 +763,9 @@ class Archive_code {
    * @returns {boolean}
    */
   ifExist(args) {
-    if(!(args.con in this.content)) return false;
-    return Cast.toString(args.key) in this.content[args.con];
+    const content = this.content[Cast.toString(args.con)];
+    if(content === undefined) return false;
+    return Cast.toString(args.key) in content;
   }
 
   /**
@@ -763,8 +775,9 @@ class Archive_code {
    * @returns {number}
    */
   getAmount(args) {
-    if(!(args.con in this.content)) return '';
-    return Object.keys(this.content[args.con]).length;
+    const content = this.content[Cast.toString(args.con)];
+    if(content === undefined) return 0;
+    return Object.keys(content).length;
   }
 
   /**
@@ -776,10 +789,12 @@ class Archive_code {
    * @returns {SCarg}
    */
   getContentByNumber(args) {
-    if(!(args.con in this.content)) return '';
-    let key = Object.keys(this.content[args.con])[args.index - 1]
+    const content = this.content[Cast.toString(args.con)];
+    if(content === undefined) return false;
+    const key = Object.keys(content)[Cast.toNumber(args.index) - 1]
     if (key === undefined) return '';
-    let value = this.content[args.con][key]
+    const value = content[key]
+    if (value === undefined) return '';
     switch (args.type) {
       case '1'://名称
         return key;
@@ -818,8 +833,9 @@ class Archive_code {
    * @returns {SCarg}
    */
   getContent(args) {
-    if(!(args.con in this.content)) return '';
-    return this._anythingToNumberString(this.content[args.con][args.key]);
+    const content = this.content[Cast.toString(args.con)];
+    if(content === undefined) return '';
+    return this._anythingToNumberString(content[Cast.toString(args.key)]);
   }
 
   /**
@@ -851,14 +867,16 @@ class Archive_code {
    * @returns {SCarg}
    */
   getContentOfList(args) {
-    if(!(args.con in this.content)) return '';
-    let t = this.content[args.con][args.key]
+    const content = this.content[Cast.toString(args.con)];
+    if(content === undefined) return '';
+    const t = content[Cast.toString(args.key)]
     if (Array.isArray(t)) {
-      let i = Cast.toNumber(args.n) - 1;
-      if (i < 0 || i >= t.length) {
+      const i = Cast.toNumber(args.n) - 1;
+      const val = t[i];
+      if (val === undefined) {
         return '';
       }
-      return t[i];
+      return this._anythingToNumberString(val);
     } else {
       return '';
     }
@@ -871,9 +889,10 @@ class Archive_code {
    * @param {SCarg} args.key
    * @returns {number|''}
    */
-  getLengthOfList(args, util) {
-    if(!(args.con in this.content)) return '';
-    let t = this.content[args.con][args.key]
+  getLengthOfList(args) {
+    const content = this.content[Cast.toString(args.con)];
+    if(content === undefined) return '';
+    const t = content[Cast.toString(args.key)]
     return Array.isArray(t) ? t.length : '';
   }
 
@@ -886,28 +905,12 @@ class Archive_code {
     switch(typeof(value)){
       case "string":
       case "number":
-        break;
+        return value;
       case "object":
-        if(Array.isArray(value)) {
-          value = JSON.stringify(value); //列表直接用 JSON 格式显示
-          // 在原版scratch中如果直接使用列表作为变量，得到的结果是由空格分隔的。如果列表中每一项都是单个字符(数字不算)，则结果不用空格分割。这里还原原版行为。
-          // 如果直接String()的话，项目会默认用逗号分割。
-          // let areChars = true;
-          // value.forEach((v, i) => {
-          //   if (!(typeof v === "string" && v.length === 1)) {
-          //     areChars = false;
-          //   }
-          // });
-          // value = value.join(areChars ? '' : ' ');
-        } else {
-          // 否则，就直接stringify
-          value = JSON.stringify(value);
-        }
-        break;
+        return JSON.stringify(value);
       default:
-        value = ''; //包含了undefined
+        return ''; //包含了undefined
     }
-    return value;
   }
 
   /**
@@ -920,10 +923,11 @@ class Archive_code {
    * @returns {void}
    */
   saveContentToVar(args, util) {
-    if(!(args.con in this.content)) return;
+    const content = this.content[Cast.toString(args.con)];
+    if(content === undefined) return;
     if (args.var !== 'empty') {
       const variable = util.target.lookupVariableById(args.var);
-      let value = this._anythingToNumberString(this.content[args.con][args.key]);
+      const value = this._anythingToNumberString(content[Cast.toString(args.key)]);
       variable.value = value;
     }
   }
@@ -938,25 +942,31 @@ class Archive_code {
    * @returns {void}
    */
   saveContentToList(args, util) {
-    if(!(args.con in this.content)) return;
+    const content = this.content[Cast.toString(args.con)];
+    if(content === undefined) return;
     if (args.list !== 'empty') {
       const list = util.target.lookupVariableById(args.list);
-      if (!(args.key in this.content[args.con])) {
+      /** @type {unknown} */
+      const value = content[Cast.toString(args.key)];
+      if (value === undefined) {
         // 如果啥都没有就清空
         list.value = [];
         return;
       }
-      /** @type {unknown} */
-      let value = this.content[args.con][args.key];
+      /** @type {unknown[] | undefined} */
+      let arrvalue;
       if (!Array.isArray(value)) {
         //如果要读取的内容不是列表而是什么奇奇怪怪的东西，就把它包装成列表
-        value = [value];
+        arrvalue = [value];
+      } else {
+        arrvalue = value;
       }
-      value.forEach((v, i) => {
+      /** @type {(number|string)[]} */
+      const cleanvalue = arrvalue.map((v) => {
         // 防止数组内容混入奇奇怪怪的东西
-        value[i] = this._anythingToNumberString(v);
+        return this._anythingToNumberString(v);
       });
-      list.value = value;
+      list.value = cleanvalue;
     }
   }
 
@@ -968,8 +978,9 @@ class Archive_code {
    * @returns {void}
    */
   delete(args) {
-    if(!(args.con in this.content)) return;
-    delete this.content[args.con][args.key];
+    const content = this.content[Cast.toString(args.con)];
+    if(content === undefined) return;
+    delete content[Cast.toString(args.key)];
   }
 
   /**
@@ -1036,11 +1047,11 @@ class Archive_code {
   /**
    * 发现 Unicode 为 0  10  13  55296~57343(2047个字符) 的字符无法被正常复制，故排除掉这些字符。
    * 看起来没有用到。
-   * @param {string} c
+   * @param {string} ch
    * @returns {number}
    */
-  getCode(c) {
-    c = Cast.toString(c).charCodeAt(0)
+  getCode(ch) {
+    const c = Cast.toString(ch).charCodeAt(0)
     if (c === 0) return NaN
     else if (c < 10) return c-1  //排除0
     else if (c < 13) return c-2  //排除0 10
@@ -1057,11 +1068,11 @@ class Archive_code {
    * @returns {string}
    */
   ArkosEncrypt(args) {
-    args.key = this.keyVar(args.key)
-    args.str = Cast.toString(args.str)
+    const key = this.keyVar(args.key)
+    const str = Cast.toString(args.str)
     let b = ''
-    for (let i = 0; i < args.str.length; i++) {
-      b += this.enChar1(args.str[i], args.key + i)
+    for (const [i, c] of str.split("").entries()) {
+      b += this.enChar1(c, key + i)
     }
     return b
   }
@@ -1075,11 +1086,11 @@ class Archive_code {
    * @returns {string}
    */
   ArkosDecrypt(args) {
-    args.key = this.keyVar(args.key)
-    args.str = Cast.toString(args.str)
+    const key = this.keyVar(args.key)
+    const str = Cast.toString(args.str)
     let b = ''
-    for (let i = 0; i < args.str.length; i++) {
-      b += this.deChar1(args.str[i], args.key + i)
+    for (const [i, c] of str.split("").entries()) {
+      b += this.deChar1(c, key + i)
     }
     //console.log('123')
     return b
@@ -1122,11 +1133,11 @@ class Archive_code {
    * @returns {string}
    */
   encrypt2(args) {
-    args.key = this.keyVar(args.key)
-    args.str = String(args.str)
+    const key = this.keyVar(args.key)
+    const str = Cast.toString(args.str)
     let b = ''
-    for (let i = 0; i < args.str.length; i++) {
-      b += this.enChar2(args.str[i], args.key + i)
+    for (const [i, c] of str.split("").entries()) {
+      b += this.enChar2(c, key + i)
     }
     return b
   }
@@ -1139,11 +1150,11 @@ class Archive_code {
    * @returns {string}
    */
   decrypt2(args) {
-    args.key = this.keyVar(args.key)
-    args.str = String(args.str)
+    const key = this.keyVar(args.key)
+    const str = Cast.toString(args.str)
     let b = ''
-    for (let i = 0; i < args.str.length; i += 2) {
-      b += this.deChar2(args.str[i], (i + 2 > args.str.length) ? '\0' : args.str[i + 1], args.key + i / 2)
+    for (let i = 0; i < str.length; i += 2) {
+      b += this.deChar2(str[i], (i + 2 > str.length) ? '\0' : str[i + 1], key + i / 2)
     }
     //console.log('123')
     return b
@@ -1159,8 +1170,8 @@ class Archive_code {
     let t = (c.charCodeAt(0) + p) % 65536
     t = t - t % 10 + (9 - t % 10)
 
-    let c1 = String.fromCharCode(t >> 8)
-    let c2 = String.fromCharCode(t % 256)
+    const c1 = String.fromCharCode(t >> 8)
+    const c2 = String.fromCharCode(t % 256)
     return c1 + c2
   }
 
@@ -1188,9 +1199,9 @@ class Archive_code {
   writeClipboard(args) {
     // 错误处理...
     if("navigator" in window && "clipboard" in navigator && "writeText" in navigator.clipboard) {
-      navigator.clipboard.writeText(Cast.toString(args.str)).catch(x => writeClipboard2(args));
+      navigator.clipboard.writeText(Cast.toString(args.str)).catch(() => this.writeClipboard2(args));
     } else {
-      writeClipboard2(args);
+      this.writeClipboard2(args);
     }
   }
 
@@ -1212,10 +1223,10 @@ class Archive_code {
    */
   compare(propName) {
     return (a, b) => {
-      a = a[propName]
-      b = b[propName]
-      if (a > b) return 1;
-      else if (a < b) return -1;
+      const A = a[propName]
+      const B = b[propName]
+      if (A > B) return 1;
+      else if (A < B) return -1;
       else return 0;
     }
   }
@@ -1226,26 +1237,27 @@ class Archive_code {
     let temp;
     try {
       temp = this.runtime._stageTarget.variables
-      Object.keys(temp).forEach(obj => {
-        if (temp[obj].type === '') {
+      Object.values(temp).forEach(obj => {
+        if (obj.type === '') {
           list.push({
-            text: temp[obj].name,
-            value: temp[obj].id,
+            text: obj.name,
+            value: obj.id,
           });
         }
       });
       if (!this.runtime._editingTarget.isStage) {
         temp = this.runtime._editingTarget.variables
-        Object.keys(temp).forEach(obj => {
-          if (temp[obj].type === '') {
+        Object.values(temp).forEach(obj => {
+          if (obj.type === '') {
             list.push({
-              text: '[私有变量]' + temp[obj].name,
-              value: temp[obj].id,
+              text: '[私有变量]' + obj.name,
+              value: obj.id,
             });
           }
         });
       }
     } catch (e) {
+      console.warn(e);
     }
     if (list.length === 0) {
       list.push({
@@ -1270,26 +1282,27 @@ class Archive_code {
     let temp;
     try {
       temp = this.runtime._stageTarget.variables
-      Object.keys(temp).forEach(obj => {
-        if (temp[obj].type === 'list') {
+      Object.values(temp).forEach(obj => {
+        if (obj.type === 'list') {
           list.push({
-            text: temp[obj].name,
-            value: temp[obj].id,
+            text: obj.name,
+            value: obj.id,
           });
         }
       });
       if (!this.runtime._editingTarget.isStage) {
         temp = this.runtime._editingTarget.variables
-        Object.keys(temp).forEach(obj => {
-          if (temp[obj].type === 'list') {
+        Object.values(temp).forEach(obj => {
+          if (obj.type === 'list') {
             list.push({
-              text: '[私有列表]' + temp[obj].name,
-              value: temp[obj].id,
+              text: '[私有列表]' + obj.name,
+              value: obj.id,
             });
           }
         });
       }
     } catch (e) {
+      console.warn(e);
     }
     if (list.length === 0) {
       list.push({
@@ -1303,7 +1316,7 @@ class Archive_code {
 
   findAllVarContents() {
     const list = [];
-    let temp = this.content
+    const temp = this.content
     Object.keys(temp).forEach(obj => {
       if (typeof temp[obj] !== 'object') {
         list.push({
@@ -1324,7 +1337,7 @@ class Archive_code {
 
   findAllListsContents() {
     const list = [];
-    let temp = this.content
+    const temp = this.content
     Object.keys(temp).forEach(obj => {
       if (typeof temp[obj] === 'object') {
         list.push({
