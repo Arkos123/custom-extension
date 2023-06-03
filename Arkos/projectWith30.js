@@ -1847,7 +1847,7 @@ class ArkosExtensions {
 	 */
 	getWidthOrHeight(args, util) {
 		const costumeSize = util.target.renderer.getCurrentSkinSize(util.target.drawableID);
-		return costumeSize[args.t];
+		return costumeSize[Number(args.t)];
 	}
 
 	/**
@@ -1937,7 +1937,7 @@ class ArkosExtensions {
 			case '4':
 				return bounds.right;
 			default:
-				return '';
+				return 0;
 		}
 	}
 
@@ -2086,11 +2086,11 @@ class ArkosExtensions {
 	isNum(args){
 		if(args.type === '1')
 		{
-			return !isNaN(args.c);
+			return !isNaN(Number(args.c));
 		}
 		if(args.type === '2') 
 		{
-			if(isNaN(args.c)) return false;
+			if(isNaN(Number(args.c))) return false;
 			return Cast.isInt(args.c);
 		}
 		return false;
@@ -2131,8 +2131,8 @@ class ArkosExtensions {
 	getKeyDown (args, util) {
 		let flag = false
 		let pressed =  util.ioQuery('keyboard', 'getKeyIsDown', [args.key]);
-		if(!this.lastKeyPressed[args.key] && pressed) flag = true; //这一帧按下，且上一帧未按下
-		this.lastKeyPressed[args.key] = pressed
+		if(!this.lastKeyPressed[Cast.toString(args.key)] && pressed) flag = true; //这一帧按下，且上一帧未按下
+		this.lastKeyPressed[Cast.toString(args.key)] = pressed
 		return flag;
     }
 
@@ -2272,16 +2272,17 @@ class ArkosExtensions {
 
 	/**
 	 * 数组排序规则（生成排序函数）
-	 * @param {string} propName 属性名称
+	 * @template {string} T
+	 * @param {T} propName 属性名称
 	 * @param {'asc'|'desc'} order 排序方式
-	 * @returns {(a: {[key: string]: SCarg}, b: {[key: string]: SCarg}) => number}
+	 * @returns {(a: {[key in T]: SCarg}, b: {[key in T]: SCarg}) => number}
 	 */
 	sortRule(propName, order) {
 		return (a, b) => {
-			a = a[propName]
-			b = b[propName]
-			if(a > b) return order === 'asc' ? 1 : -1;
-			else if(a < b) return order === 'asc' ? -1 : 1;
+			const A = a[propName]
+			const B = b[propName]
+			if(A > B) return order === 'asc' ? 1 : -1;
+			else if(A < B) return order === 'asc' ? -1 : 1;
 			else return 0;
 		}
 	}
@@ -2307,23 +2308,35 @@ class ArkosExtensions {
 	}
 
 	/**
-	 * 如果排序表不存在就建立一个
-	 * @param {SCarg} list
+	 * 获得排序表，如果排序表不存在就建立一个
+	 * @param {string} list
+	 * @returns {SortedTable}
 	 */
-	createTableIfNotExist(list) {
-		if(!(list in this.sortedTable))
-			this.sortedTable[list] = {
-				order: 'desc',
-				list: []
-			};
+	getOrCreateTable(list) {
+		const origlist = this.sortedTable[list];
+		if(origlist !== undefined)
+			return origlist;
+
+		/** @type {SortedTable} */
+		const newlist = {
+			order: "desc",
+			list: []
+		};
+		this.sortedTable[list] = newlist;
+		return newlist;
 	}
 
 	/**
 	 * 排序某个排序表
-	 * @param {SCarg} list 排序表名称
+	 * @param {string} listname 排序表名称
 	 */
-	sortTable(list) {
-		this.sortedTable[list].list.sort(this.sortRule("rankValue", this.sortedTable[list].order));
+	sortTable(listname) {
+		const list = this.sortedTable[listname];
+		if(list === undefined) {
+			console.warn(`找不到排序表 ${list}`);
+			return;
+		}
+		list.list.sort(this.sortRule("rankValue", list.order));
 	}
 
 	/**
@@ -2333,8 +2346,9 @@ class ArkosExtensions {
 	 * @returns {void}
 	 */
 	clearSortedTable(args) {
-		this.createTableIfNotExist(args.list)
-		this.sortedTable[args.list].list = [];
+		const listname = Cast.toString(args.list);
+		const list = this.getOrCreateTable(listname)
+		list.list = [];
 	}
 
 	/**
@@ -2345,9 +2359,10 @@ class ArkosExtensions {
 	 * @returns {void}
 	 */
 	setTypeOfSortedTable(args) {
-		this.createTableIfNotExist(args.list)
-		this.sortedTable[args.list].order = args.type;
-		this.sortTable(args.list)
+		const listname = Cast.toString(args.list);
+		const list = this.getOrCreateTable(listname)
+		list.order = args.type;
+		this.sortTable(listname)
 	}
 
 	/**
@@ -2359,17 +2374,17 @@ class ArkosExtensions {
 	 */
 	_findPlaceAndInsert(list, order, item) {
 		//删除已存在的内容
-		for(let i = 0; i < list.length; i++) {
-			if(list[i].name === item.name) {
+		for(const [i, listi] of list.entries()) {
+			if(listi.name === item.name) {
 				//删除同名项
 				list.splice(i, 1);
 				break;
 			}
 		}
 		//查找插入位置并插入
-		for(let i = 0; i < list.length; i++) {
-			if((list[i].rankValue > item.rankValue && order === 'asc') ||
-				(list[i].rankValue < item.rankValue && order === 'desc')) {
+		for(const [i, listi] of list.entries()) {
+			if((listi.rankValue > item.rankValue && order === 'asc') ||
+				(listi.rankValue < item.rankValue && order === 'desc')) {
 				//插入在该项前
 				list.splice(i, 0, item);
 				return;
@@ -2389,10 +2404,11 @@ class ArkosExtensions {
 	 * @returns {void}
 	 */
 	addToSortedTable(args) {
-		this.createTableIfNotExist(args.list)
+		const listname = Cast.toString(args.list);
+		const list = this.getOrCreateTable(listname)
 		this._findPlaceAndInsert(
-			this.sortedTable[args.list].list,
-			this.sortedTable[args.list].order, {
+			list.list,
+			list.order, {
 				name: args.name,
 				rankValue: Cast.toNumber(args.value),
 				extra: args.extra
@@ -2431,9 +2447,31 @@ class ArkosExtensions {
 	 * @returns {SCarg}
 	 */
 	getFromSortedTableByNo(args) {
-		if(!(args.list in this.sortedTable)) return '';
-		let list = this.sortedTable[args.list].list;
-		return this._getTInItem(list[args.n - 1], args.t, Cast.toNumber(args.n));
+		const listname = Cast.toString(args.list);
+		let list = this.sortedTable[listname];
+		if(list === undefined) {
+			return '';
+		}
+		const item = list.list[Cast.toNumber(args.n) - 1];
+		if(item === undefined) {
+			return '';
+		}
+		return this._getTInItem(item, args.t, Cast.toNumber(args.n));
+	}
+
+	/**
+	 * 获取第一个指定名称的项以及它的编号
+	 * @param {SortedTableItem[]} list 排序表
+	 * @param {SCarg} name
+	 * @returns {[number, SortedTableItem] | undefined}
+	 */
+	_getItemAndIdxByName(list, name) {
+		for(const [i, listi] of list.entries()) {
+			if(listi.name === name) {
+				return [i, listi];
+			}
+		}
+		return undefined;
 	}
 
 	/**
@@ -2443,8 +2481,8 @@ class ArkosExtensions {
 	 * @returns {number}
 	 */
 	_getItemIdxByName(list, name) {
-		for(let i = 0; i < list.length; i++) {
-			if(list[i].name === name) {
+		for(const [i, listi] of list.entries()) {
+			if(listi.name === name) {
 				return i;
 			}
 		}
@@ -2460,11 +2498,13 @@ class ArkosExtensions {
 	 * @returns {SCarg}
 	 */
 	getFromSortedTableByName(args) {
-		if(!(args.list in this.sortedTable)) return '';
-		let list = this.sortedTable[args.list].list;
-		let n = this._getItemIdxByName(list, args.name);
-		if(n === -1) return '';
-		return this._getTInItem(list[n], args.t, n + 1);
+		const listname = Cast.toString(args.list);
+		let table = this.sortedTable[listname];
+		if(table === undefined) return '';
+		let idx_item = this._getItemAndIdxByName(table.list, args.name);
+		if(idx_item === undefined) return '';
+		let [n, item] = idx_item;
+		return this._getTInItem(item, args.t, n + 1);
 	}
 
 	/**
@@ -2474,8 +2514,10 @@ class ArkosExtensions {
 	 * @returns {number}
 	 */
 	lengthOfSortedTable(args) {
-		if(!(args.list in this.sortedTable)) return 0;
-		return this.sortedTable[args.list].list.length;
+		const listname = Cast.toString(args.list);
+		let table = this.sortedTable[listname];
+		if(table === undefined) return 0;
+		return table.list.length;
 	}
 
 	/**
@@ -2486,26 +2528,26 @@ class ArkosExtensions {
 	 * @returns {void}
 	 */
 	deleteNameOfSortedTable(args) {
-		if(!(args.list in this.sortedTable)) return;
-		let list = this.sortedTable[args.list].list;
-		let n = this._getItemIdxByName(list, args.name);
+		const listname = Cast.toString(args.list);
+		let table = this.sortedTable[listname];
+		if(table === undefined) return;
+		let n = this._getItemIdxByName(table.list, args.name);
 		if(n === -1) return;
-		list.splice(n, 1);
+		table.list.splice(n, 1);
 	}
 
 	/**
 	 * 获取颜色HEX码
 	 * @param {object} args
 	 * @param {SCarg} args.COLOR
-	 * @param {Util} util
 	 * @returns {string}
 	 */
-	colorToHex(args, util) {
+	colorToHex(args) {
 		let c = Cast.toRgbColorList(args.COLOR)
 		return Color.rgbToHex({
-			r: c[0],
-			g: c[1],
-			b: c[2]
+			r: c[0] ?? 0,
+			g: c[1] ?? 0,
+			b: c[2] ?? 0
 		});
 	}
 
@@ -2521,14 +2563,12 @@ class ArkosExtensions {
 		switch (typeof(value)) {
 			case "string":
 			case "number":
-				break;
+				return value;
 			case "object":
-				value = JSON.stringify(value);
-				break;
+				return JSON.stringify(value);
 			default:
-				value = ''; //包含了undefined
+				return "";
 		}
-		return value;
 	}
 
 	/**
@@ -2886,7 +2926,7 @@ class ArkosExtensions {
 			case '2': //内容
 				return this._anythingToNumberString(con[key]);
 			default:
-				return;
+				return '';
 		}
 	}
 
@@ -3004,7 +3044,7 @@ class ArkosExtensions {
 	 * @returns {void}
 	 */
 	scaleSpriteX(args, util) {
-		this.scaleSprite(0, args.input, util);
+		this.scaleSprite(0, Cast.toNumber(args.input), util);
 	}
 
 	/**
@@ -3015,7 +3055,7 @@ class ArkosExtensions {
 	 * @returns {void}
 	 */
 	scaleSpriteY(args, util) {
-		this.scaleSprite(1, args.input, util);
+		this.scaleSprite(1, Cast.toNumber(args.input), util);
 	}
 	//
 	//图层操作
