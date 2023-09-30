@@ -1,8 +1,10 @@
 import Cast from '../utils/cast.js'
 import Color from '../utils/color.js'
+
 // import cover from './assets/icon.svg'
 // import icon from './assets/icon.svg'
 //鸣谢：-6 优化代码和修复了一些 bug；_30 提供了部分拓展积木
+const extensionId = 'arkosExtensions';
 
 class ArkosExtensions {
 	constructor(runtime) {
@@ -157,7 +159,7 @@ class ArkosExtensions {
 			},
 
 			en: {
-				'ArkosExt.extensionName': "Arkos' Extensions",
+				'ArkosExt.extensionName': 'Arkos\' Extensions',
 				'ArkosExt.stringEquality': '(case sensitive)[ONE]=[TWO]',
 				'ArkosExt.directionFromAtoB': 'direction from x1:[X1]y1:[Y1]to x2:[X2]y2:[Y2]',
 				'ArkosExt.differenceBetweenDirections': 'direction[b] minus direction[a]',
@@ -304,14 +306,14 @@ class ArkosExtensions {
 
 	getInfo() {
 		return {
-			id: 'hcnTest', // 拓展id
+			id: extensionId, // 拓展id
 			name: this.formatMessage('ArkosExt.extensionName'),
 
 			color1: '#FF8383',
 			// menuIconURI: icon,
 			// blockIconURI: icon,
 			blocks: [
-				"---" + this.formatMessage("ArkosExt.info1"), //🏃 坐标&角度   
+				'---' + this.formatMessage('ArkosExt.info1'), //🏃 坐标&角度
 				// 计算点A到点B的方向
 				{
 					opcode: 'getDirFromAToB',
@@ -393,7 +395,7 @@ class ArkosExtensions {
 					},
 					filter: ['sprite']
 				},
-				"---" + this.formatMessage("ArkosExt.info2"), //🔠字符串处理 
+				'---' + this.formatMessage('ArkosExt.info2'), //🔠字符串处理
 				// 查找子字符串，从pos开始
 				{
 					opcode: 'indexof',
@@ -458,7 +460,7 @@ class ArkosExtensions {
 						},
 					},
 				},
-				"---" + this.formatMessage("ArkosExt.info3"), //🔧实用积木
+				'---' + this.formatMessage('ArkosExt.info3'), //🔧实用积木
 				// 判断相等（区分大小写）
 				{
 					opcode: 'strictlyEquals',
@@ -729,7 +731,7 @@ class ArkosExtensions {
 					},
 					filter: ['sprite']
 				},
-				"---" + this.formatMessage("ArkosExt.info3.5"), //🔧JSON积木
+				'---' + this.formatMessage('ArkosExt.info3.5'), //🔧JSON积木
 				//JSON列表长度
 				{
 					opcode: 'lenOfJSONList',
@@ -774,11 +776,11 @@ class ArkosExtensions {
 						},
 						type: {
 							type: 'string',
-							menu: 'JSONm', 
+							menu: 'JSONm',
 						}
 					},
 				},
-				"---" + this.formatMessage("ArkosExt.info4"), //📄数据获取 
+				'---' + this.formatMessage('ArkosExt.info4'), //📄数据获取
 				//获取特效值
 				{
 					opcode: 'getEffect',
@@ -843,7 +845,7 @@ class ArkosExtensions {
 					blockType: 'reporter',
 					text: this.formatMessage('ArkosExt.cloneCount')
 				},
-				"---" + this.formatMessage("ArkosExt.info5"), //📊排序表 
+				'---' + this.formatMessage('ArkosExt.info5'), //📊排序表
 				//📊清空排序表
 				{
 					opcode: 'clearSortedTable',
@@ -967,7 +969,7 @@ class ArkosExtensions {
 					},
 				},
 
-				"---" + this.formatMessage("ArkosExt.info6"), //🗂️ 临时数据
+				'---' + this.formatMessage('ArkosExt.info6'), //🗂️ 临时数据
 				//清空所有临时数据
 				{
 					opcode: 'deleteAllTempData',
@@ -1004,7 +1006,7 @@ class ArkosExtensions {
 						},
 					},
 				},
-				"---" + this.formatMessage("ArkosExt.info7"), //临时变量
+				'---' + this.formatMessage('ArkosExt.info7'), //临时变量
 				//设置临时数据
 				{
 					opcode: 'setTempVar',
@@ -1049,7 +1051,7 @@ class ArkosExtensions {
 						},
 					},
 				},
-				"---" + this.formatMessage("ArkosExt.info8"), //临时列表
+				'---' + this.formatMessage('ArkosExt.info8'), //临时列表
 				//创建或清空临时列表
 				{
 					opcode: 'clearTempList',
@@ -1194,7 +1196,7 @@ class ArkosExtensions {
 						},
 					},
 				},
-				"---" + this.formatMessage("ArkosExt.info9"), //临时容器
+				'---' + this.formatMessage('ArkosExt.info9'), //临时容器
 				//创建或清空临时容器
 				{
 					opcode: 'clearTempCon',
@@ -1331,8 +1333,8 @@ class ArkosExtensions {
 
 
 				//
-				"---" + this.formatMessage("30Ext.info"), //感谢30提供的扩展
-				"---" + this.formatMessage("30Ext.info.1"), //定向缩放
+				'---' + this.formatMessage('30Ext.info'), //感谢30提供的扩展
+				'---' + this.formatMessage('30Ext.info.1'), //定向缩放
 				{
 					opcode: 'mirrorSprite',
 					blockType: 'command',
@@ -1352,7 +1354,7 @@ class ArkosExtensions {
 					hideFromPalette: true,
 					text: this.formatMessage('30Ext.block.clearMirror')
 				},
-				//获取缩放 
+				//获取缩放
 				{
 					opcode: 'getScale',
 					blockType: 'reporter',
@@ -1391,7 +1393,7 @@ class ArkosExtensions {
 					},
 					filter: ['sprite']
 				},
-				"---" + this.formatMessage("30Ext.info.2"), //图层管理
+				'---' + this.formatMessage('30Ext.info.2'), //图层管理
 				//获取图层
 				{
 					opcode: 'getLayer',
@@ -1414,127 +1416,127 @@ class ArkosExtensions {
 			],
 			menus: {
 				isNumMenu:[{
-					text: this.formatMessage('ArkosExt.isNum'), 
+					text: this.formatMessage('ArkosExt.isNum'),
 					value: '1'
 				},
 				{
-					text: this.formatMessage('ArkosExt.isInt'), 
+					text: this.formatMessage('ArkosExt.isInt'),
 					value: '2'
 				}
-			],
+				],
 				biCalMenu: [{
-						text: this.formatMessage('ArkosExt.max'), 
-						value: '1'
-					},
-					{
-						text: this.formatMessage('ArkosExt.min'), 
-						value: '2'
-					},
-					{
-						text: this.formatMessage('ArkosExt.diff'), 
-						value: '3'
-					},
-					{
-						text: this.formatMessage('ArkosExt.sumOfSqu'), 
-						value: '4'
-					},
-					{
-						text: this.formatMessage('ArkosExt.sqrtSumOfSqu'), 
-						value: '5'
-					}
+					text: this.formatMessage('ArkosExt.max'),
+					value: '1'
+				},
+				{
+					text: this.formatMessage('ArkosExt.min'),
+					value: '2'
+				},
+				{
+					text: this.formatMessage('ArkosExt.diff'),
+					value: '3'
+				},
+				{
+					text: this.formatMessage('ArkosExt.sumOfSqu'),
+					value: '4'
+				},
+				{
+					text: this.formatMessage('ArkosExt.sqrtSumOfSqu'),
+					value: '5'
+				}
 				],
 				TorF: [{
-						text: 'true', 
-						value: '1'
-					},
-					{
-						text: 'false', 
-						value: '2'
-					},
+					text: 'true',
+					value: '1'
+				},
+				{
+					text: 'false',
+					value: '2'
+				},
 				],
 				TorF2: [{
-						text: this.formatMessage('ArkosExt.true'), 
-						value: '1'
-					},
-					{
-						text: this.formatMessage('ArkosExt.false'), 
-						value: '0'
-					},
+					text: this.formatMessage('ArkosExt.true'),
+					value: '1'
+				},
+				{
+					text: this.formatMessage('ArkosExt.false'),
+					value: '0'
+				},
 				],
 				JSONm: [{
-						text: this.formatMessage('ArkosExt.JSONm1'), //加入
-						value: '1'
-					},
-					{
-						text: this.formatMessage('ArkosExt.JSONm2'), //删除
-						value: '2'
-					},
+					text: this.formatMessage('ArkosExt.JSONm1'), //加入
+					value: '1'
+				},
+				{
+					text: this.formatMessage('ArkosExt.JSONm2'), //删除
+					value: '2'
+				},
 				],
 				HVMenu: [{
-						text: this.formatMessage('30Ext.block.hor'), //水平
-						value: 'h'
-					},
-					{
-						text: this.formatMessage('30Ext.block.ver'), //垂直
-						value: 'v'
-					},
+					text: this.formatMessage('30Ext.block.hor'), //水平
+					value: 'h'
+				},
+				{
+					text: this.formatMessage('30Ext.block.ver'), //垂直
+					value: 'v'
+				},
 				],
 				conInfoMenu: [{
-						text: this.formatMessage('ArkosExt.conInfo1'), //名称
-						value: '1'
-					},
-					{
-						text: this.formatMessage('ArkosExt.conInfo2'), //内容
-						value: '2'
-					},
+					text: this.formatMessage('ArkosExt.conInfo1'), //名称
+					value: '1'
+				},
+				{
+					text: this.formatMessage('ArkosExt.conInfo2'), //内容
+					value: '2'
+				},
 				],
 				conOpMenu: [{
-						text: this.formatMessage('ArkosExt.conOp1'), //设为
-						value: '1'
-					},
-					{
-						text: this.formatMessage('ArkosExt.conOp2'), //增加
-						value: '2'
-					},
+					text: this.formatMessage('ArkosExt.conOp1'), //设为
+					value: '1'
+				},
+				{
+					text: this.formatMessage('ArkosExt.conOp2'), //增加
+					value: '2'
+				},
 				],
 				ListOpMenu: [{
-						text: this.formatMessage('ArkosExt.ListOp1'), //插入
-						value: '1'
-					},
-					{
-						text: this.formatMessage('ArkosExt.ListOp2'), //替换
-						value: '2'
-					},
-					{
-						text: this.formatMessage('ArkosExt.ListOp3'), //增加
-						value: '3'
-					},
+					text: this.formatMessage('ArkosExt.ListOp1'), //插入
+					value: '1'
+				},
+				{
+					text: this.formatMessage('ArkosExt.ListOp2'), //替换
+					value: '2'
+				},
+				{
+					text: this.formatMessage('ArkosExt.ListOp3'), //增加
+					value: '3'
+				},
 				],
 				tableItemPropertyMenu: [{
-						text: this.formatMessage('ArkosExt.name'),
-						value: '1'
-					},
-					{
-						text: this.formatMessage('ArkosExt.rank'),
-						value: '2'
-					},
-					{
-						text: this.formatMessage('ArkosExt.rankValue'),
-						value: '3'
-					},
-					{
-						text: this.formatMessage('ArkosExt.extra'),
-						value: '4'
-					},
+					text: this.formatMessage('ArkosExt.name'),
+					value: '1'
+				},
+				{
+					text: this.formatMessage('ArkosExt.rank'),
+					value: '2'
+				},
+				{
+					text: this.formatMessage('ArkosExt.rankValue'),
+					value: '3'
+				},
+				{
+					text: this.formatMessage('ArkosExt.extra'),
+					value: '4'
+				},
 				],
 				sortOrder: [{
-						text: this.formatMessage('ArkosExt.asc'),
-						value: 'asc' //升序
-					},
-					{
-						text: this.formatMessage('ArkosExt.desc'),
-						value: 'desc' //降序
-					},
+					text: this.formatMessage('ArkosExt.asc'),
+					value: 'asc' //升序
+				},
+				{
+					text: this.formatMessage('ArkosExt.desc'),
+					value: 'desc' //降序
+				},
 				],
 				sortedTableMenu: {
 					items: 'findAllSortedTable',
@@ -1545,71 +1547,71 @@ class ArkosExtensions {
 				opMenu2: ['<', '>', '≤', '≥', '=', '≠', ],
 				//logicMenu
 				logicMenu: [{
-						text: this.formatMessage('ArkosExt.or'),
-						value: 'or'
-					},
-					{
-						text: this.formatMessage('ArkosExt.and'),
-						value: 'and'
-					},
+					text: this.formatMessage('ArkosExt.or'),
+					value: 'or'
+				},
+				{
+					text: this.formatMessage('ArkosExt.and'),
+					value: 'and'
+				},
 				],
 				//角色上下左右边缘
 				boundaryMenu: [{
-						text: this.formatMessage('ArkosExt.top'),
-						value: '1'
-					},
-					{
-						text: this.formatMessage('ArkosExt.bottom'),
-						value: '2'
-					},
-					{
-						text: this.formatMessage('ArkosExt.left'),
-						value: '3'
-					},
-					{
-						text: this.formatMessage('ArkosExt.right'),
-						value: '4'
-					},
+					text: this.formatMessage('ArkosExt.top'),
+					value: '1'
+				},
+				{
+					text: this.formatMessage('ArkosExt.bottom'),
+					value: '2'
+				},
+				{
+					text: this.formatMessage('ArkosExt.left'),
+					value: '3'
+				},
+				{
+					text: this.formatMessage('ArkosExt.right'),
+					value: '4'
+				},
 				],
 				//0宽1高 菜单
 				WOrH: [{
-						text: this.formatMessage('ArkosExt.width'),
-						value: '0'
-					},
-					{
-						text: this.formatMessage('ArkosExt.height'),
-						value: '1'
-					},
+					text: this.formatMessage('ArkosExt.width'),
+					value: '0'
+				},
+				{
+					text: this.formatMessage('ArkosExt.height'),
+					value: '1'
+				},
 				],
 				//特效菜单
 				effectMenu: [{
-						text: this.formatMessage('ArkosExt.color'),
-						value: 'color'
-					},
-					{
-						text: this.formatMessage('ArkosExt.fisheye'),
-						value: 'fisheye'
-					},
-					{
-						text: this.formatMessage('ArkosExt.whirl'),
-						value: 'whirl'
-					},
-					{
-						text: this.formatMessage('ArkosExt.pixelate'),
-						value: 'pixelate'
-					},
-					{
-						text: this.formatMessage('ArkosExt.mosaic'),
-						value: 'mosaic'
-					},
-					{
-						text: this.formatMessage('ArkosExt.brightness'),
-						value: 'brightness'
-					},
-					{
-						text: this.formatMessage('ArkosExt.ghost'),
-						value: 'ghost'
-					}
+					text: this.formatMessage('ArkosExt.color'),
+					value: 'color'
+				},
+				{
+					text: this.formatMessage('ArkosExt.fisheye'),
+					value: 'fisheye'
+				},
+				{
+					text: this.formatMessage('ArkosExt.whirl'),
+					value: 'whirl'
+				},
+				{
+					text: this.formatMessage('ArkosExt.pixelate'),
+					value: 'pixelate'
+				},
+				{
+					text: this.formatMessage('ArkosExt.mosaic'),
+					value: 'mosaic'
+				},
+				{
+					text: this.formatMessage('ArkosExt.brightness'),
+					value: 'brightness'
+				},
+				{
+					text: this.formatMessage('ArkosExt.ghost'),
+					value: 'ghost'
+				}
 				],
 				//30Ext
 				spritesMenu: {
@@ -1711,7 +1713,7 @@ class ArkosExtensions {
 	getEffect(args, util) {
 		let effect = Cast.toString(args.EFFECT)
 			.toLowerCase();
-		if(!util.target.effects.hasOwnProperty(effect)) return 0;
+		if(!util.target.effects.hasOwnProperty.call(effect)) return 0;
 		return util.target.effects[effect];
 	}
 
@@ -1772,9 +1774,6 @@ class ArkosExtensions {
 				util.target.emit('EVENT_TARGET_VISUAL_CHANGE', util.target);
 				util.target.runtime.requestRedraw();
 			}
-		} else {
-			util.target.x = args.x;
-			util.target.y = args.y;
 		}
 		util.target.emit('TARGET_MOVED', util.target, oldX, oldY, false);
 		util.target.runtime.requestTargetsUpdate(util.target);
@@ -1784,16 +1783,16 @@ class ArkosExtensions {
 	getBoundaryCoord(args, util) {
 		const bounds = util.target.runtime.renderer.getBounds(util.target.drawableID);
 		switch (args.t) {
-			case '1':
-				return bounds.top;
-			case '2':
-				return bounds.bottom;
-			case '3':
-				return bounds.left;
-			case '4':
-				return bounds.right;
-			default:
-				return '';
+		case '1':
+			return bounds.top;
+		case '2':
+			return bounds.bottom;
+		case '3':
+			return bounds.left;
+		case '4':
+			return bounds.right;
+		default:
+			return '';
 		}
 	}
 
@@ -1804,8 +1803,6 @@ class ArkosExtensions {
 		if(util.target.renderer) {
 			const stageWidth = util.target.runtime.stageWidth;
 			const stageHeight = util.target.runtime.stageHeight;
-			console.log('stageWidth', stageWidth);
-			console.log('stageHeight', stageHeight);
 			const bounds = util.target.runtime.renderer.getBounds(util.target.drawableID);
 			if(bounds.right < -stageWidth / 2 ||
 				bounds.left > stageWidth / 2 ||
@@ -1843,20 +1840,20 @@ class ArkosExtensions {
 
 	compare(a, b, op) {
 		switch (op) {
-			case '<':
-				return Cast.compare(a, b) < 0;
-			case '>':
-				return Cast.compare(a, b) > 0;
-			case '=':
-				return Cast.compare(a, b) === 0;
-			case '≤':
-				return Cast.compare(a, b) <= 0;
-			case '≥':
-				return Cast.compare(a, b) >= 0;
-			case '≠':
-				return Cast.compare(a, b) !== 0;
-			default:
-				return false;
+		case '<':
+			return Cast.compare(a, b) < 0;
+		case '>':
+			return Cast.compare(a, b) > 0;
+		case '=':
+			return Cast.compare(a, b) === 0;
+		case '≤':
+			return Cast.compare(a, b) <= 0;
+		case '≥':
+			return Cast.compare(a, b) >= 0;
+		case '≠':
+			return Cast.compare(a, b) !== 0;
+		default:
+			return false;
 		}
 	}
 
@@ -1864,16 +1861,16 @@ class ArkosExtensions {
 		let a = Cast.toNumber(args.a)
 		let b = Cast.toNumber(args.b)
 		switch (args.cal) {
-			case '1':
-				return (Cast.compare(args.a, args.b) > 0) ? args.a : args.b; //max
-			case '2':
-				return (Cast.compare(args.a, args.b) > 0) ? args.b : args.a; //min
-			case '3':
-				return Math.abs(a-b);//差
-			case '4':
-				return a*a+b*b;//平方和
-			default:
-				return Math.sqrt(a*a+b*b);//平方和开方
+		case '1':
+			return (Cast.compare(args.a, args.b) > 0) ? args.a : args.b; //max
+		case '2':
+			return (Cast.compare(args.a, args.b) > 0) ? args.b : args.a; //min
+		case '3':
+			return Math.abs(a-b);//差
+		case '4':
+			return a*a+b*b;//平方和
+		default:
+			return Math.sqrt(a*a+b*b);//平方和开方
 		}
 	}
 
@@ -1886,7 +1883,7 @@ class ArkosExtensions {
 		{
 			return !isNaN(args.c);
 		}
-		if(args.type === '2') 
+		if(args.type === '2')
 		{
 			if(isNaN(args.c)) return false;
 			return Cast.isInt(args.c);
@@ -1897,7 +1894,7 @@ class ArkosExtensions {
 	//取符号。负数为-1,0和正数为1
 	sgn(args){
 		let c = Cast.toNumber(args.c)
-		return c<0 ? -1 : 1; 
+		return c<0 ? -1 : 1;
 	}
 
 	//概率
@@ -1915,7 +1912,7 @@ class ArkosExtensions {
 		if(!this.lastKeyPressed[args.key] && pressed) flag = true; //这一帧按下，且上一帧未按下
 		this.lastKeyPressed[args.key] = pressed
 		return flag;
-    }
+	}
 
 	//暂时不知如何实现
 	dataChanged(args, util){
@@ -1943,7 +1940,7 @@ class ArkosExtensions {
 			return 0;
 		}
 	}
-	
+
 	JSONListContains(args) {
 		try {
 			let list = JSON.parse(Cast.toString(args.list))
@@ -1984,15 +1981,15 @@ class ArkosExtensions {
 		return this.compare(args.a, args.b, args.op1) && this.compare(args.b, args.c, args.op2)
 	}
 
-	//形如：a≤b且/或>c op1,op2 logic 
+	//形如：a≤b且/或>c op1,op2 logic
 	compareTwoSidesPlus(args) {
 		switch (args.logic) {
-			case 'or':
-				return this.compare(args.a, args.b, args.op1) || this.compare(args.a, args.c, args.op2)
-			case 'and':
-				return this.compare(args.a, args.b, args.op1) && this.compare(args.a, args.c, args.op2)
-			default:
-				return false;
+		case 'or':
+			return this.compare(args.a, args.b, args.op1) || this.compare(args.a, args.c, args.op2)
+		case 'and':
+			return this.compare(args.a, args.b, args.op1) && this.compare(args.a, args.c, args.op2)
+		default:
+			return false;
 		}
 	}
 
@@ -2036,7 +2033,7 @@ class ArkosExtensions {
 	}
 
 	sortTable(list) {
-		this.sortedTable[list].list.sort(this.sortRule("rankValue", this.sortedTable[list].order));
+		this.sortedTable[list].list.sort(this.sortRule('rankValue', this.sortedTable[list].order));
 	}
 
 	//📊清空排序表
@@ -2090,16 +2087,16 @@ class ArkosExtensions {
 	_getTInItem(item, t, rank) {
 		if(item === undefined) return '';
 		switch (t) {
-			case '1':
-				return item.name;
-			case '2':
-				return rank;
-			case '3':
-				return item.rankValue;
-			case '4':
-				return item.extra;
-			default:
-				return '';
+		case '1':
+			return item.name;
+		case '2':
+			return rank;
+		case '3':
+			return item.rankValue;
+		case '4':
+			return item.extra;
+		default:
+			return '';
 		}
 	}
 
@@ -2159,14 +2156,14 @@ class ArkosExtensions {
 	//来自 -6 ：任意内容转字符或数字
 	_anythingToNumberString(value) {
 		switch (typeof(value)) {
-			case "string":
-			case "number":
-				break;
-			case "object":
-				value = JSON.stringify(value);
-				break;
-			default:
-				value = ''; //包含了undefined
+		case 'string':
+		case 'number':
+			break;
+		case 'object':
+			value = JSON.stringify(value);
+			break;
+		default:
+			value = ''; //包含了undefined
 		}
 		return value;
 	}
@@ -2185,7 +2182,7 @@ class ArkosExtensions {
 	}
 
 	ifTempDataExist(args) {
-		return this.tempData.hasOwnProperty(Cast.toString(args.data))
+		return this.tempData.hasOwnProperty.call(Cast.toString(args.data))
 	}
 
 	setTempVar(args) {
@@ -2231,17 +2228,17 @@ class ArkosExtensions {
 		if(n < 1 || n > list.length + 1) return;
 		n -= 1;
 		switch (args.op) {
-			case '1': //插入
-				list.splice(n, 0, args.t);
-				return;
-			case '2': //替换
-				list[n] = args.t;
-				return;
-			case '3': //增加
-				list[n] = Cast.toNumber(list[n]) + Cast.toNumber(args.t);
-				return;
-			default:
-				return;
+		case '1': //插入
+			list.splice(n, 0, args.t);
+			return;
+		case '2': //替换
+			list[n] = args.t;
+			return;
+		case '3': //增加
+			list[n] = Cast.toNumber(list[n]) + Cast.toNumber(args.t);
+			return;
+		default:
+			return;
 		}
 	}
 
@@ -2272,15 +2269,15 @@ class ArkosExtensions {
 	//检查list是否包含item
 	_ifListItemExist(list, item) {
 		if (list.indexOf(item) >= 0) {
-            return true;
-        }
-        // Try using Scratch comparison operator on each item.
-        // (Scratch considers the string '123' equal to the number 123).
-        for (let i = 0; i < list.length; i++) {
-            if (Cast.compare(list[i], item) === 0) {
-                return true;
-            }
-        }
+			return true;
+		}
+		// Try using Scratch comparison operator on each item.
+		// (Scratch considers the string '123' equal to the number 123).
+		for (let i = 0; i < list.length; i++) {
+			if (Cast.compare(list[i], item) === 0) {
+				return true;
+			}
+		}
 		return false;
 	}
 
@@ -2295,10 +2292,10 @@ class ArkosExtensions {
 	//获取list中item索引
 	_getListItemIdx(list, item) {
 		for (let i = 0; i < list.length; i++) {
-            if (Cast.compare(list[i], item) === 0) {
-                return i + 1;
-            }
-        }
+			if (Cast.compare(list[i], item) === 0) {
+				return i + 1;
+			}
+		}
 		return 0;
 	}
 
@@ -2308,7 +2305,7 @@ class ArkosExtensions {
 		const item = Cast.toString(args.c)
 
 		return this._getListItemIdx(list, item)
-		
+
 	}
 
 	//容器
@@ -2332,15 +2329,15 @@ class ArkosExtensions {
 		if(!(typeof(con) === 'object' && !Array.isArray(con) && con !== null)) return;
 		let c = Cast.toString(args.c)
 		switch (args.op) {
-			case '1': //设为
-				con[c] = args.t;
-				return;
-			case '2': //增加
-				if(!(c in con)) return;
-				con[c] = Cast.toNumber(con[c]) + Cast.toNumber(args.t);
-				return;
-			default:
-				return;
+		case '1': //设为
+			con[c] = args.t;
+			return;
+		case '2': //增加
+			if(!(c in con)) return;
+			con[c] = Cast.toNumber(con[c]) + Cast.toNumber(args.t);
+			return;
+		default:
+			return;
 		}
 	}
 
@@ -2362,12 +2359,12 @@ class ArkosExtensions {
 		let key = Object.keys(con)[Cast.toNumber(args.n) - 1]
 		if(key === undefined) return '';
 		switch (args.t) {
-			case '1': //名称
-				return key;
-			case '2': //内容
-				return this._anythingToNumberString(con[key]);
-			default:
-				return;
+		case '1': //名称
+			return key;
+		case '2': //内容
+			return this._anythingToNumberString(con[key]);
+		default:
+			return;
 		}
 	}
 
@@ -2380,7 +2377,7 @@ class ArkosExtensions {
 	ifConItemExist(args) {
 		let con = this.tempData[Cast.toString(args.con)]
 		if(!(typeof(con) === 'object' && con !== null)) return false;
-		return con.hasOwnProperty(Cast.toString(args.c));
+		return con.hasOwnProperty.call(Cast.toString(args.c));
 	}
 
 
@@ -2392,7 +2389,7 @@ class ArkosExtensions {
 	getSpritesMenu() {
 		var sprites = [];
 		for(const targetId in this.runtime.targets) {
-			if(!this.runtime.targets.hasOwnProperty(targetId)) continue;
+			if(!this.runtime.targets.hasOwnProperty.call(targetId)) continue;
 			if(!this.runtime.targets[targetId].isOriginal) continue;
 			if(this.runtime.targets[targetId] === this.runtime._editingTarget) continue; //排除自己
 			let name = this.runtime.targets[targetId].sprite.name;
@@ -2404,11 +2401,11 @@ class ArkosExtensions {
 	//角色造型操作
 	//
 	clearMirror(){
-		console.warn("镜像积木已下线，请使用新积木\nMirror block is offline, please use new blocks.");
+		console.warn('镜像积木已下线，请使用新积木\nMirror block is offline, please use new blocks.');
 	}
 
 	mirrorSprite(){
-		console.warn("镜像积木已下线，请使用新积木\nMirror block is offline, please use new blocks.");
+		console.warn('镜像积木已下线，请使用新积木\nMirror block is offline, please use new blocks.');
 	}
 
 	getScale(args, util) {
@@ -2417,7 +2414,7 @@ class ArkosExtensions {
 		else if(args.input === 'v') return drawable.ext30_scale[1]
 		else return drawable.ext30_scale[0]
 	}
-	
+
 	scaleSprite(index, value, util) {
 		let target = util.target;
 		let drawable = this.runtime.renderer._allDrawables[target.drawableID];
@@ -2426,7 +2423,7 @@ class ArkosExtensions {
 			drawable.ext30_rawScale = drawable.scale;
 			//注入修改函数
 			let old_fun = drawable.__proto__.updateScale;
-			Object.defineProperty(drawable, "updateScale" ,
+			Object.defineProperty(drawable, 'updateScale' ,
 				{value: function(scale) {
 					this.ext30_rawSize = scale[0];
 					scale[0] = this.ext30_rawSize * this.ext30_scale[0];
@@ -2463,7 +2460,7 @@ window.tempExt = {
 	info: {
 		name: 'hcn.extensionName',
 		description: 'hcn.description',
-		extensionId: 'hcnTest',
+		extensionId: extensionId,
 		// iconURL: icon,
 		// insetIconURL: cover,
 		featured: true,
