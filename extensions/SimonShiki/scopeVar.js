@@ -488,8 +488,8 @@ class ScopeVar {
               isLastBlock: false,
               // declare var within the for loop
               declaredScopeVars: {
-                [this.descendInput(node.var).constantValue]: k,
-                [this.descendInput(node.idx).constantValue]: v,
+                [this.descendInput(node.idx).constantValue]: k,
+                [this.descendInput(node.var).constantValue]: v,
               },
             });
           } else {
