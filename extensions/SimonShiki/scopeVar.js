@@ -59,6 +59,22 @@ class ScopeVar {
       }
     }
 
+    // 修复非编译和编译模式行为不一致的一个 bug：
+    // 非编译模式下，循环内创建的变量下次循环仍能使用；而编译模式中下次循环不能使用。
+    // 为此，非编译模式执行 stepToBranch 时，清空 stackFrame的局部变量信息
+    const { sequencer } = this.runtime.sequencer;
+    const origStepBranch = sequencer.stepToBranch;
+    sequencer.stepToBranch = function (thread, branchNum, isLoop, ...args) {
+      if (isLoop) {
+        const executionContext = thread.peekStackFrame()?.executionContext;
+        if (executionContext?.shikiVars) {
+          // 清空已存在的局部变量信息（来自上次循环）
+          executionContext.shikiVars = Object.create(null);
+        }
+      }
+      origStepBranch.call(this, thread, branchNum, isLoop, ...args);
+    };
+
     this.patchCompiler();
     this.runtime.ext_shikiScopeVar = this;
 
@@ -842,7 +858,7 @@ class ScopeVar {
     let vars;
     if (stackFrames.length - 1 < back) {
       if (typeof thread.shikiVars !== "object") {
-        thread.shikiVars = {};
+        thread.shikiVars = Object.create(null);
       }
       vars = thread.shikiVars;
     } else {
@@ -859,7 +875,8 @@ class ScopeVar {
       }
       const { executionContext } = outerStackFrame;
       if (typeof executionContext.shikiVars !== "object") {
-        executionContext.shikiVars = {};
+        // 防止读取 __proto__、hasOwnProperty 等变量名时访问原型链信息
+        executionContext.shikiVars = Object.create(null);
       }
       vars = executionContext.shikiVars;
     }
