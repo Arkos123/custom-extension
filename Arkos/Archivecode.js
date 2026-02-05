@@ -9,13 +9,30 @@ import Cast from '../utils/cast.js'
 // console.log(Cast.toNumber('123'))
 //console.log(Cast.toNumber('aab'))
 
-let LZString = _LZString();
+const LZString = _LZString();
+
+/** @typedef {string|number|boolean} SCarg 来自Scratch圆形框的参数，虽然这个框可能只能输入数字，但是可以放入变量，因此有可能获得数字和文本，需要同时处理 */
+
+/** @typedef {any} Util util 参数，暂时定为 any */
+
+/**
+ * 容器项目格式
+ * @typedef {SCarg | ContainerArray | ContainerObject} Container
+ * @typedef {Container[]} ContainerArray
+ * @typedef {{[key: string]: Container}} ContainerObject
+ */
 
 class Archive_code {
   constructor(runtime) {
     this.runtime = runtime
-    this.convertedSuccessfully = false   //JSON转容器是否成功
-    //content为一个大容器，内部存很多小容器
+
+    /** JSON转容器是否成功 */
+    this.convertedSuccessfully = false
+
+    /**
+     * content为一个大容器，内部存很多小容器
+     * @type { {[id: string]: ContainerObject} }
+     */
     this.content = {
       "1":{
         金币: 200,
@@ -103,6 +120,11 @@ class Archive_code {
 
   }
 
+  /**
+   * 获取翻译
+   * @param {string} id
+   * @returns {string}
+   */
   formatMessage(id) {
     return this._formatMessage({
       id,
@@ -574,7 +596,7 @@ class Archive_code {
 
   findAllContainer() {
     const list = [];
-    let temp = this.content;
+    const temp = this.content;
     Object.keys(temp).forEach(obj => {
       //if ( Array.isArray (temp[obj]) ) {
         list.push(obj);
@@ -589,49 +611,108 @@ class Archive_code {
     return list;
   }
 
-  _createContainerIfNotExist(con){
-    if(!(con in this.content))
-      this.content[con]={};
+  /**
+   * 创建容器，如果不存在
+   * @param {string} con
+   * @returns {Container}
+   */
+  _getOrCreateContainer(con){
+    const content = this.content[con];
+    if(content === undefined) {
+      /** @type {Container} */
+      const newcontent = {};
+      this.content[con] = newcontent;
+      return newcontent;
+    }
+    return content;
   }
 
+  /**
+   * 清空容器
+   * @param {object} args
+   * @param {SCarg} args.con
+   * @returns {void}
+   */
   clearContainer(args) {
-    this._createContainerIfNotExist(args.con)
-    this.content[args.con] = {};
+    this.content[Cast.toString(args.con)] = {};
   }
 
+  /**
+   * 返回序列化结果
+   * @param {object} args
+   * @param {SCarg} args.con
+   * @returns {string}
+   */
   containerToJSON(args) {
-    if(!(args.con in this.content)) return '';
-    return JSON.stringify(this.content[args.con]);
+    const content = this.content[Cast.toString(args.con)];
+    if(content === undefined) return '';
+    return JSON.stringify(content);
   }
 
+  /**
+   * 将内容加入容器 名称xx 值xx
+   * @param {object} args
+   * @param {SCarg} args.con
+   * @param {SCarg} args.name
+   * @param {SCarg} args.value
+   * @returns {void}
+   */
   addContentToContainer(args) {
-    if(!(args.con in this.content)) return;
-    this.content[args.con][args.name] = args.value;
+    const content = this.content[Cast.toString(args.con)];
+    if(content === undefined) return;
+    content[Cast.toString(args.name)] = args.value;
   }
 
+  /**
+   * 将变量加入序列
+   * @param {object} args
+   * @param {SCarg} args.con
+   * @param {SCarg} args.name
+   * @param {SCarg} args.var
+   * @param {Util} util
+   * @returns {void}
+   */
   addVariableToContainer(args, util) {
-    if(!(args.con in this.content)) return;
+    const content = this.content[Cast.toString(args.con)];
+    if(content === undefined) return;
     if (args.var !== 'empty') {
       const variable = util.target.lookupVariableById(args.var);
-      this.content[args.con][args.name] = variable.value;
+      content[Cast.toString(args.name)] = variable.value;
     }
   }
 
+  /**
+   * 将列表加入序列
+   * @param {object} args
+   * @param {SCarg} args.con
+   * @param {SCarg} args.name
+   * @param {SCarg} args.list
+   * @param {Util} util
+   * @returns {void}
+   */
   addListToContainer(args, util) {
-    if(!(args.con in this.content)) return;
+    const content = this.content[Cast.toString(args.con)];
+    if(content === undefined) return;
     if (args.list !== 'empty') {
       const list = util.target.lookupVariableById(args.list);
-      this.content[args.con][args.name] = list.value;
+      content[String(args.name)] = list.value;
     }
   }
   
-  //直接获得{container}中的key内容
+  /**
+   * 直接获得{container}中的key内容
+   * 直接获得container容器中的key内容
+   * @param {object} args
+   * @param {SCarg} args.container
+   * @param {SCarg} args.key
+   * @returns {SCarg}
+   */
   getContentInContainer(args) {
     let content;
     try {
       content = JSON.parse(Cast.toString(args.container))
       if(typeof(content) === 'object' && !Array.isArray(content) && content !== null) {
-        return this._anythingToNumberString(content[args.key]);
+        return this._anythingToNumberString(content[Cast.toString(args.key)]);
       }else{
         return ''
       }
@@ -640,43 +721,80 @@ class Archive_code {
     }
   }
 
+  /**
+   * 反序列化
+   * @param {object} args
+   * @param {SCarg} args.con
+   * @param {SCarg} args.code
+   * @returns {void}
+   */
   parseJSONToContainer(args) {
-    this._createContainerIfNotExist(args.con)
-    let content;
     this.convertedSuccessfully = false;
     try {
       // 如果解析失败，不要修改content。
-      content = JSON.parse(Cast.toString(args.code))
+      const content = JSON.parse(Cast.toString(args.code))
       // 考虑数组[]情况。
       if(typeof(content) === 'object' && !Array.isArray(content) && content !== null) {
-        this.content[args.con] = content;
+        this.content[Cast.toString(args.con)] = content;
         this.convertedSuccessfully = true;
+      } else {
+        console.warn("解析容器失败");
       }
     } catch (e) {
+      console.warn("解析容器失败", e);
       //this.content2 = {}
     }
     //console.log(typeof this.content)
   }
 
+  /**
+   * 反序列化是否成功
+   * @returns {boolean}
+   */
   ifConvertedSuccessfully() {
     return this.convertedSuccessfully
   }
 
+  /**
+   * 返回名称为..的内容
+   * @param {object} args
+   * @param {SCarg} args.con
+   * @param {SCarg} args.key
+   * @returns {boolean}
+   */
   ifExist(args) {
-    if(!(args.con in this.content)) return false;
-    return Cast.toString(args.key) in this.content[args.con];
+    const content = this.content[Cast.toString(args.con)];
+    if(content === undefined) return false;
+    return Cast.toString(args.key) in content;
   }
 
+  /**
+   * 返回容器中数据数量
+   * @param {object} args
+   * @param {SCarg} args.con
+   * @returns {number}
+   */
   getAmount(args) {
-    if(!(args.con in this.content)) return '';
-    return Object.keys(this.content[args.con]).length;
+    const content = this.content[Cast.toString(args.con)];
+    if(content === undefined) return 0;
+    return Object.keys(content).length;
   }
 
+  /**
+   * 获取第n(从1开始)个内容，的(1名称2内容3类型4列表长度)
+   * @param {object} args
+   * @param {SCarg} args.con
+   * @param {SCarg} args.index
+   * @param {SCarg} args.type
+   * @returns {SCarg}
+   */
   getContentByNumber(args) {
-    if(!(args.con in this.content)) return '';
-    let key = Object.keys(this.content[args.con])[args.index - 1]
+    const content = this.content[Cast.toString(args.con)];
+    if(content === undefined) return false;
+    const key = Object.keys(content)[Cast.toNumber(args.index) - 1]
     if (key === undefined) return '';
-    let value = this.content[args.con][key]
+    const value = content[key]
+    if (value === undefined) return '';
     switch (args.type) {
       case '1'://名称
         return key;
@@ -707,104 +825,169 @@ class Archive_code {
 
   }
 
+  /**
+   * 返回名称为..的内容
+   * @param {object} args
+   * @param {SCarg} args.con
+   * @param {SCarg} args.key
+   * @returns {SCarg}
+   */
   getContent(args) {
-    if(!(args.con in this.content)) return '';
-    return this._anythingToNumberString(this.content[args.con][args.key]);
+    const content = this.content[Cast.toString(args.con)];
+    if(content === undefined) return '';
+    return this._anythingToNumberString(content[Cast.toString(args.key)]);
   }
 
+  /**
+   * 获取字符unicode
+   * @param {object} args
+   * @param {SCarg} args.c
+   * @returns {number}
+   */
   getUnicode(args) {
     return Cast.toString(args.c).charCodeAt(0)
   }
 
+  /**
+   * 由unicode得到字符
+   * @param {object} args
+   * @param {SCarg} args.code
+   * @returns {string}
+   */
   getCharByUnicode(args) {
     return String.fromCharCode(Cast.toNumber(args.code))
   }
 
+  /**
+   * 返回名称为..的列表的第n项
+   * @param {object} args
+   * @param {SCarg} args.con
+   * @param {SCarg} args.key
+   * @param {SCarg} args.n
+   * @returns {SCarg}
+   */
   getContentOfList(args) {
-    if(!(args.con in this.content)) return '';
-    let t = this.content[args.con][args.key]
+    const content = this.content[Cast.toString(args.con)];
+    if(content === undefined) return '';
+    const t = content[Cast.toString(args.key)]
     if (Array.isArray(t)) {
-      let i = Cast.toNumber(args.n) - 1;
-      if (i < 0 || i >= t.length) {
+      const i = Cast.toNumber(args.n) - 1;
+      const val = t[i];
+      if (val === undefined) {
         return '';
       }
-      return t[i];
+      return this._anythingToNumberString(val);
     } else {
       return '';
     }
   }
 
-  getLengthOfList(args, util) {
-    if(!(args.con in this.content)) return '';
-    let t = this.content[args.con][args.key]
+  /**
+   * 返回名称为..的列表的项目数
+   * @param {object} args
+   * @param {SCarg} args.con
+   * @param {SCarg} args.key
+   * @returns {number|''}
+   */
+  getLengthOfList(args) {
+    const content = this.content[Cast.toString(args.con)];
+    if(content === undefined) return '';
+    const t = content[Cast.toString(args.key)]
     return Array.isArray(t) ? t.length : '';
   }
 
+	/**
+	 * 来自 -6 ：任意内容转字符或数字
+	 * @param {unknown} value
+	 * @returns {string|number}
+	 */
   _anythingToNumberString(value) {
     switch(typeof(value)){
       case "string":
       case "number":
-        break;
+        return value;
       case "object":
-        if(Array.isArray(value)) {
-          value = JSON.stringify(value); //列表直接用 JSON 格式显示
-          // 在原版scratch中如果直接使用列表作为变量，得到的结果是由空格分隔的。如果列表中每一项都是单个字符(数字不算)，则结果不用空格分割。这里还原原版行为。
-          // 如果直接String()的话，项目会默认用逗号分割。
-          // let areChars = true;
-          // value.forEach((v, i) => {
-          //   if (!(typeof v === "string" && v.length === 1)) {
-          //     areChars = false;
-          //   }
-          // });
-          // value = value.join(areChars ? '' : ' ');
-        } else {
-          // 否则，就直接stringify
-          value = JSON.stringify(value);
-        }
-        break;
+        return JSON.stringify(value);
       default:
-        value = ''; //包含了undefined
+        return ''; //包含了undefined
     }
-    return value;
   }
 
+  /**
+   * 将内容保存到变量
+   * @param {object} args
+   * @param {SCarg} args.con
+   * @param {SCarg} args.key
+   * @param {SCarg} args.var
+   * @param {Util} util
+   * @returns {void}
+   */
   saveContentToVar(args, util) {
-    if(!(args.con in this.content)) return;
+    const content = this.content[Cast.toString(args.con)];
+    if(content === undefined) return;
     if (args.var !== 'empty') {
       const variable = util.target.lookupVariableById(args.var);
-      let value = this._anythingToNumberString(this.content[args.con][args.key]);
+      const value = this._anythingToNumberString(content[Cast.toString(args.key)]);
       variable.value = value;
     }
   }
 
+  /**
+   * 将内容保存到列表
+   * @param {object} args
+   * @param {SCarg} args.con
+   * @param {SCarg} args.key
+   * @param {SCarg} args.list
+   * @param {Util} util
+   * @returns {void}
+   */
   saveContentToList(args, util) {
-    if(!(args.con in this.content)) return;
+    const content = this.content[Cast.toString(args.con)];
+    if(content === undefined) return;
     if (args.list !== 'empty') {
       const list = util.target.lookupVariableById(args.list);
-      if (!(args.key in this.content[args.con])) {
+      /** @type {unknown} */
+      const value = content[Cast.toString(args.key)];
+      if (value === undefined) {
         // 如果啥都没有就清空
         list.value = [];
         return;
       }
-      let value = this.content[args.con][args.key];
+      /** @type {unknown[] | undefined} */
+      let arrvalue;
       if (!Array.isArray(value)) {
         //如果要读取的内容不是列表而是什么奇奇怪怪的东西，就把它包装成列表
-        value = [value];
+        arrvalue = [value];
+      } else {
+        arrvalue = value;
       }
-      value.forEach((v, i) => {
+      /** @type {(number|string)[]} */
+      const cleanvalue = arrvalue.map((v) => {
         // 防止数组内容混入奇奇怪怪的东西
-        value[i] = this._anythingToNumberString(v);
+        return this._anythingToNumberString(v);
       });
-      list.value = value;
+      list.value = cleanvalue;
     }
   }
 
+  /**
+   * 删除内容
+   * @param {object} args
+   * @param {SCarg} args.con
+   * @param {SCarg} args.key
+   * @returns {void}
+   */
   delete(args) {
-    if(!(args.con in this.content)) return;
-    delete this.content[args.con][args.key];
+    const content = this.content[Cast.toString(args.con)];
+    if(content === undefined) return;
+    delete content[Cast.toString(args.key)];
   }
 
-  //将密匙转换为一个值
+  /**
+   * 将密匙转换为一个值
+   * @param {SCarg} k
+   * @returns {number}
+   */
   keyVar(k) {
     k = Cast.toString(k)
     let t = 13;
@@ -815,7 +998,14 @@ class Archive_code {
     return t
   }
 
-  //加密
+  /**
+   * 加密
+   * @param {object} args
+   * @param {SCarg} args.str
+   * @param {SCarg} args.key
+   * @param {SCarg} args.method
+   * @returns {string}
+   */
   encrypt(args) {
     args.key = Cast.toString(args.key)
     args.str = Cast.toString(args.str)
@@ -831,7 +1021,14 @@ class Archive_code {
     }
   }
 
-  //解密
+  /**
+   * 解密
+   * @param {object} args
+   * @param {SCarg} args.str
+   * @param {SCarg} args.key
+   * @param {SCarg} args.method
+   * @returns {string}
+   */
   decrypt(args) {
     args.key = Cast.toString(args.key)
     args.str = Cast.toString(args.str)
@@ -847,9 +1044,14 @@ class Archive_code {
     }
   }
 
-  //发现 Unicode 为 0  10  13  55296~57343(2047个字符) 的字符无法被正常复制，故排除掉这些字符。
-  getCode(c) {
-    c = Cast.toString(c).charCodeAt(0)
+  /**
+   * 发现 Unicode 为 0  10  13  55296~57343(2047个字符) 的字符无法被正常复制，故排除掉这些字符。
+   * 看起来没有用到。
+   * @param {string} ch
+   * @returns {number}
+   */
+  getCode(ch) {
+    const c = Cast.toString(ch).charCodeAt(0)
     if (c === 0) return NaN
     else if (c < 10) return c-1  //排除0
     else if (c < 13) return c-2  //排除0 10
@@ -858,30 +1060,48 @@ class Archive_code {
     else return NaN
   }
 
-  //Arkos加密法
+  /**
+   * Arkos加密法
+   * @param {object} args
+   * @param {SCarg} args.str
+   * @param {SCarg} args.key
+   * @returns {string}
+   */
   ArkosEncrypt(args) {
-    args.key = this.keyVar(args.key)
-    args.str = Cast.toString(args.str)
+    const key = this.keyVar(args.key)
+    const str = Cast.toString(args.str)
     let b = ''
-    for (let i = 0; i < args.str.length; i++) {
-      b += this.enChar1(args.str[i], args.key + i)
+    for (const [i, c] of str.split("").entries()) {
+      b += this.enChar1(c, key + i)
     }
     return b
   }
 
 
-  //Arkos解密
+  /**
+   * Arkos解密
+   * @param {object} args
+   * @param {SCarg} args.str
+   * @param {SCarg} args.key
+   * @returns {string}
+   */
   ArkosDecrypt(args) {
-    args.key = this.keyVar(args.key)
-    args.str = Cast.toString(args.str)
+    const key = this.keyVar(args.key)
+    const str = Cast.toString(args.str)
     let b = ''
-    for (let i = 0; i < args.str.length; i++) {
-      b += this.deChar1(args.str[i], args.key + i)
+    for (const [i, c] of str.split("").entries()) {
+      b += this.deChar1(c, key + i)
     }
     //console.log('123')
     return b
   }
 
+  /**
+   * 加密字符
+   * @param {string} c 字符
+   * @param {number} p
+   * @returnss {string}
+   */
   enChar1(c, p) {
     // 目前我知道的unicode字符最大编码是131071
     let t = (c.charCodeAt(0) + p) % 54533  //
@@ -891,6 +1111,12 @@ class Archive_code {
   }
 
 
+  /**
+   * 解密字符
+   * @param {string} c 字符
+   * @param {number} p
+   * @returns {string}
+   */
   deChar1(c, p) {
     let t = c.charCodeAt(0)
     t += 9 - 2 * (t % 10)
@@ -899,38 +1125,63 @@ class Archive_code {
   }
 
 
-  //分裂加密法
+  /**
+   * 分裂加密法
+   * @param {object} args
+   * @param {SCarg} args.str
+   * @param {SCarg} args.key
+   * @returns {string}
+   */
   encrypt2(args) {
-    args.key = this.keyVar(args.key)
-    args.str = String(args.str)
+    const key = this.keyVar(args.key)
+    const str = Cast.toString(args.str)
     let b = ''
-    for (let i = 0; i < args.str.length; i++) {
-      b += this.enChar2(args.str[i], args.key + i)
+    for (const [i, c] of str.split("").entries()) {
+      b += this.enChar2(c, key + i)
     }
     return b
   }
 
-  //分裂解密
+  /**
+   * 分裂解密
+   * @param {object} args
+   * @param {SCarg} args.str
+   * @param {SCarg} args.key
+   * @returns {string}
+   */
   decrypt2(args) {
-    args.key = this.keyVar(args.key)
-    args.str = String(args.str)
+    const key = this.keyVar(args.key)
+    const str = Cast.toString(args.str)
     let b = ''
-    for (let i = 0; i < args.str.length; i += 2) {
-      b += this.deChar2(args.str[i], (i + 2 > args.str.length) ? '\0' : args.str[i + 1], args.key + i / 2)
+    for (let i = 0; i < str.length; i += 2) {
+      b += this.deChar2(str[i], (i + 2 > str.length) ? '\0' : str[i + 1], key + i / 2)
     }
     //console.log('123')
     return b
   }
 
+  /**
+   * 加密字符(2)
+   * @param {string} c 字符
+   * @param {number} p
+   * @returns {string}
+   */
   enChar2(c, p) {
     let t = (c.charCodeAt(0) + p) % 65536
     t = t - t % 10 + (9 - t % 10)
 
-    let c1 = String.fromCharCode(t >> 8)
-    let c2 = String.fromCharCode(t % 256)
+    const c1 = String.fromCharCode(t >> 8)
+    const c2 = String.fromCharCode(t % 256)
     return c1 + c2
   }
 
+  /**
+   * 解密字符(2)
+   * @param {string} c1 字符
+   * @param {string} c2 字符
+   * @param {number} p
+   * @returns {string}
+   */
   deChar2(c1, c2, p) {
     let t = c1.charCodeAt(0) * 256 + c2.charCodeAt(0)
     t %= 65536
@@ -939,54 +1190,74 @@ class Archive_code {
     return String.fromCharCode(t)
   }
 
+  /**
+   * 复制到剪切板
+   * @param {object} args
+   * @param {SCarg} args.str
+   * @returns {void}
+   */
   writeClipboard(args) {
     // 错误处理...
     if("navigator" in window && "clipboard" in navigator && "writeText" in navigator.clipboard) {
-      navigator.clipboard.writeText(Cast.toString(args.str)).catch(x => writeClipboard2(args));
+      navigator.clipboard.writeText(Cast.toString(args.str)).catch(() => this.writeClipboard2(args));
     } else {
-      writeClipboard2(args);
+      this.writeClipboard2(args);
     }
   }
 
+  /**
+   * 让用户手动复制到剪切板（prompt）
+   * @param {object} args
+   * @param {SCarg} args.str
+   * @returns {void}
+   */
   writeClipboard2(args) {
     prompt("无法访问剪贴板，请选择在下方文字点击右键或按 Ctrl+C 复制。", Cast.toString(args.str));
   }
 
+  /**
+   * 比较函数
+   * @template {string} T
+   * @param {T} propName 要比较的属性
+   * @returns {(a: {[key in T]: SCarg}, b: {[key in T]: SCarg})=>number}
+   */
   compare(propName) {
     return (a, b) => {
-      a = a[propName]
-      b = b[propName]
-      if (a > b) return 1;
-      else if (a < b) return -1;
+      const A = a[propName]
+      const B = b[propName]
+      if (A > B) return 1;
+      else if (A < B) return -1;
       else return 0;
     }
   }
 
   findAllVar() {
     const list = [];
+    /** @type { {[id: string]: {id: string, type: "list"|"", name: string}} } */
     let temp;
     try {
       temp = this.runtime._stageTarget.variables
-      Object.keys(temp).forEach(obj => {
-        if (temp[obj].type === '') {
+      Object.values(temp).forEach(obj => {
+        if (obj.type === '') {
           list.push({
-            text: temp[obj].name,
-            value: temp[obj].id,
+            text: obj.name,
+            value: obj.id,
           });
         }
       });
       if (!this.runtime._editingTarget.isStage) {
         temp = this.runtime._editingTarget.variables
-        Object.keys(temp).forEach(obj => {
-          if (temp[obj].type === '') {
+        Object.values(temp).forEach(obj => {
+          if (obj.type === '') {
             list.push({
-              text: '[私有变量]' + temp[obj].name,
-              value: temp[obj].id,
+              text: '[私有变量]' + obj.name,
+              value: obj.id,
             });
           }
         });
       }
     } catch (e) {
+      console.warn(e);
     }
     if (list.length === 0) {
       list.push({
@@ -1007,29 +1278,31 @@ class Archive_code {
 
   findAllList() {
     const list = [];
+    /** @type { {[id: string]: {id: string, type: "list"|"", name: string}} } */
     let temp;
     try {
       temp = this.runtime._stageTarget.variables
-      Object.keys(temp).forEach(obj => {
-        if (temp[obj].type === 'list') {
+      Object.values(temp).forEach(obj => {
+        if (obj.type === 'list') {
           list.push({
-            text: temp[obj].name,
-            value: temp[obj].id,
+            text: obj.name,
+            value: obj.id,
           });
         }
       });
       if (!this.runtime._editingTarget.isStage) {
         temp = this.runtime._editingTarget.variables
-        Object.keys(temp).forEach(obj => {
-          if (temp[obj].type === 'list') {
+        Object.values(temp).forEach(obj => {
+          if (obj.type === 'list') {
             list.push({
-              text: '[私有列表]' + temp[obj].name,
-              value: temp[obj].id,
+              text: '[私有列表]' + obj.name,
+              value: obj.id,
             });
           }
         });
       }
     } catch (e) {
+      console.warn(e);
     }
     if (list.length === 0) {
       list.push({
@@ -1043,7 +1316,7 @@ class Archive_code {
 
   findAllVarContents() {
     const list = [];
-    let temp = this.content
+    const temp = this.content
     Object.keys(temp).forEach(obj => {
       if (typeof temp[obj] !== 'object') {
         list.push({
@@ -1064,7 +1337,7 @@ class Archive_code {
 
   findAllListsContents() {
     const list = [];
-    let temp = this.content
+    const temp = this.content
     Object.keys(temp).forEach(obj => {
       if (typeof temp[obj] === 'object') {
         list.push({
@@ -1104,6 +1377,12 @@ function _LZString() {
   var f = String.fromCharCode;
 
   var LZString = {
+    /**
+     * SC 压缩函数
+     * @param {string} uncompressed 压缩(加密)前的内容
+     * @param {string} key 加密用的密码，可以为空
+     * @returns {string}
+     */
     scompress: function(uncompressed, key) {
       if (key.length !== 0)
         key = this.scompress(key, "");
@@ -1330,6 +1609,12 @@ function _LZString() {
       return context_data.join('');
     },
 
+    /**
+     * SC 解压函数
+     * @param {string} compressed 压缩后的文本
+     * @param {string} key 密码
+     * @returns {string}
+     */
     sdecompress: function(compressed, key) {
       if (key.length !== 0)
         key = this.scompress(key, "");
